@@ -19,29 +19,35 @@ namespace YodiiStaticProxy.Fody
         TypeReference _serviceProxyBaseTypeRef;
 
         // Init logging delegates to make testing easier
+
+        public static ModuleWeaver Instance { get; private set; }
+
         public ModuleWeaver()
         {
             LogInfo = m => { };
+            Instance = this;
         }
 
         public void Execute()
         {
-//        typeSystem = ModuleDefinition.TypeSystem;
-//        var newType = new TypeDefinition(null, "Hello", TypeAttributes.Public, typeSystem.Object);
-//
-//        AddConstructor(newType);
-//
-//        AddHelloWorld(newType);
-//
-//        ModuleDefinition.Types.Add(newType);
-//        LogInfo("Added type 'Hello' with method 'World'.");
+            //        typeSystem = ModuleDefinition.TypeSystem;
+            //        var newType = new TypeDefinition(null, "Hello", TypeAttributes.Public, typeSystem.Object);
+            //
+            //        AddConstructor(newType);
+            //
+            //        AddHelloWorld(newType);
+            //
+            //        ModuleDefinition.Types.Add(newType);
+            //        LogInfo("Added type 'Hello' with method 'World'.");
 
             // ******************************
+            WeavingInformation.Initialize();
+
+
 
             _yodiiServiceTypeDef = ModuleDefinition.GetTypes().First(t => t.FullName == typeof(IYodiiService).FullName);
             var serviceProxyTypeDef = ModuleDefinition.Types.First(t => t.FullName == typeof (ServiceProxyBase).FullName);
 
-            
             var serviceTypesToProxy = ModuleDefinition.GetTypes().Where(x => x.IsInterface && x.Interfaces.Contains(_yodiiServiceTypeDef));
             foreach (var type in serviceTypesToProxy)
             {

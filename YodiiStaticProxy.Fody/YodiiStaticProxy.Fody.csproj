@@ -118,6 +118,7 @@
     <Compile Include="Service\ServiceProxyBase.cs" />
     <Compile Include="Service\SimpleServiceHostConfiguration.cs" />
     <Compile Include="Service\UseTheProxyBase.cs" />
+    <Compile Include="WeavingInformation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

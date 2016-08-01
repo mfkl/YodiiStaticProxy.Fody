@@ -199,11 +199,13 @@ namespace YodiiStaticProxy.Fody.Service
             }
 
 
-            public TypeDefinition FinalizeStatic(object unavailableImpl)
+            public TypeDefinition FinalizeStatic()
             {
+                
                 Type proxyType = _typeBuilder.CreateType();
-                ServiceProxyBase p = Activator.CreateInstance(proxyType, unavailableImpl, _definition.TypeInterface, _mRefs, _eRefs);
-                return p;
+                var typeRef = WeavingInformation.ModuleDefinition.ImportReference(proxyType);
+                return typeRef.Resolve();
+      //          ServiceProxyBase p = Activator.CreateInstance(proxyType, unavailableImpl, _definition.TypeInterface, _mRefs, _eRefs);
             }
 
 
@@ -744,77 +746,70 @@ namespace YodiiStaticProxy.Fody.Service
 		/// </summary>
 		/// <param name="definition">Definition of the proxy to build.</param>
 		/// <returns></returns>
-		internal static ServiceProxyBase CreateProxy( IProxyDefinition definition )
-		{
-			Debug.Assert( definition.TypeInterface.IsInterface, "This check MUST be done by ProxyDefinition implementation." );
+//		internal static ServiceProxyBase CreateProxy( IProxyDefinition definition )
+//		{
+//			Debug.Assert( definition.TypeInterface.IsInterface, "This check MUST be done by ProxyDefinition implementation." );
+//
+//			string dynamicTypeName = String.Format( "{0}_Proxy_{1}", definition.TypeInterface.Name, Interlocked.Increment( ref _typeID ) );
+//
+//            // Defines a public sealed class that implements typeInterface only.
+//            TypeBuilder typeBuilder = _moduleBuilder.DefineType(
+//                    dynamicTypeName,
+//                    TypeAttributes.Class | TypeAttributes.Sealed,
+//                    definition.ProxyBase,
+//                    new Type[] { definition.TypeInterface } );
+//
+//            // This defines the IService<typeInterface> interface.
+//            if( definition.IsDynamicService )
+//            {
+//                typeBuilder.AddInterfaceImplementation( typeof(IServiceUntyped) );
+//                
+//                // The proxy object implements both typeInterface and IService<typeInterface> interfaces.
+//                Type serviceInterfaceType = typeof( IService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
+//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
+//
+//                serviceInterfaceType = typeof( IOptionalService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
+//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
+//
+//                serviceInterfaceType = typeof( IOptionalRecommendedService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
+//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
+//
+//                serviceInterfaceType = typeof( IRunnableService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
+//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
+//
+//                serviceInterfaceType = typeof( IRunnableRecommendedService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
+//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
+//
+//                serviceInterfaceType = typeof( IRunningService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
+//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
+//            }
+//            
+//            ProxyGenerator pg = new ProxyGenerator( typeBuilder, definition );
+//
+//            pg.DefineConstructor();
+//
+//			pg.DefineServiceProperty();
+//
+//			pg.DefineImplementationProperty();
+//
+//            pg.ImplementInterface();
+//
+//            object unavailableImpl = CreateUnavailableImplementation( definition.TypeInterface, dynamicTypeName + "_UN" );
+//
+//			return pg.Finalize( unavailableImpl );
+//		}
 
-			string dynamicTypeName = String.Format( "{0}_Proxy_{1}", definition.TypeInterface.Name, Interlocked.Increment( ref _typeID ) );
-
-            // Defines a public sealed class that implements typeInterface only.
-            TypeBuilder typeBuilder = _moduleBuilder.DefineType(
-                    dynamicTypeName,
-                    TypeAttributes.Class | TypeAttributes.Sealed,
-                    definition.ProxyBase,
-                    new Type[] { definition.TypeInterface } );
-
-            // This defines the IService<typeInterface> interface.
-            if( definition.IsDynamicService )
-            {
-                typeBuilder.AddInterfaceImplementation( typeof(IServiceUntyped) );
-                
-                // The proxy object implements both typeInterface and IService<typeInterface> interfaces.
-                Type serviceInterfaceType = typeof( IService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-
-                serviceInterfaceType = typeof( IOptionalService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-
-                serviceInterfaceType = typeof( IOptionalRecommendedService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-
-                serviceInterfaceType = typeof( IRunnableService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-
-                serviceInterfaceType = typeof( IRunnableRecommendedService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-
-                serviceInterfaceType = typeof( IRunningService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-            }
-            
-            ProxyGenerator pg = new ProxyGenerator( typeBuilder, definition );
-
-            pg.DefineConstructor();
-
-			pg.DefineServiceProperty();
-
-			pg.DefineImplementationProperty();
-
-            pg.ImplementInterface();
-
-            object unavailableImpl = CreateUnavailableImplementation( definition.TypeInterface, dynamicTypeName + "_UN" );
-
-			return pg.Finalize( unavailableImpl );
-		}
-
-        static object CreateUnavailableImplementation( Type interfaceType, string dynamicTypeName )
+        static void CreateUnavailableImplementation( Type interfaceType, string dynamicTypeName )
         {
-            object unavailableImpl;
             // Defines a public sealed class that only implements typeInterface 
             // and for which all methods throw ServiceNotAvailableException.
-
-            //            TypeBuilder typeBuilderNotAvailable = _moduleBuilder.DefineType(
-            //                dynamicTypeName,
-            //                TypeAttributes.Class | TypeAttributes.Sealed,
-            //                typeof( object ),
-            //                new Type[] { interfaceType } );
-
-            var typeBuilderNotAvailable = new TypeDefinition(
-                null,
+            TypeBuilder typeBuilderNotAvailable = _moduleBuilder.DefineType(
                 dynamicTypeName,
-                Mono.Cecil.TypeAttributes.Class | Mono.Cecil.TypeAttributes.Sealed,
-                typeof(object));
+                TypeAttributes.Class | TypeAttributes.Sealed,
+                typeof( object ),
+                new [] { interfaceType } );
 
+          
             MethodInfo mGetTypeFromHandle = typeof( Type ).GetMethod( "GetTypeFromHandle" );
             ConstructorInfo cNotAvailableException = typeof( ServiceNotAvailableException ).GetConstructor( new[] { typeof( Type ) } );
             foreach( MethodInfo m in ReflectionHelper.GetFlattenMethods( interfaceType ) )
@@ -827,55 +822,49 @@ namespace YodiiStaticProxy.Fody.Service
                 g.Emit( OpCodes.Newobj, cNotAvailableException );
                 g.Emit( OpCodes.Throw );
             }
-            // 
+            
             Type unavailableType = typeBuilderNotAvailable.CreateType();
-            unavailableImpl = Activator.CreateInstance( unavailableType );
-            return unavailableImpl;
+            var typeRef = WeavingInformation.ModuleDefinition.ImportReference(unavailableType);
+            // When the host will instanciate the proxy, it should pick up that type and use it as argument in the ctor.
+            WeavingInformation.ModuleDefinition.Types.Add(typeRef.Resolve());
         }
 
 	    public static TypeDefinition CreateStaticProxy(DefaultProxyDefinition definition)
 	    {
             Debug.Assert(definition.TypeInterface.IsInterface, "This check MUST be done by ProxyDefinition implementation.");
 
-            string dynamicTypeName = String.Format("{0}_Proxy_{1}", definition.TypeInterface.Name, Interlocked.Increment(ref _typeID));
+            string dynamicTypeName = $"{definition.TypeInterface.Name}_Proxy_{Interlocked.Increment(ref _typeID)}";
 
             // Defines a public sealed class that implements typeInterface only.
-            TypeBuilder typeBuilder = _moduleBuilder.DefineType(
+            var typeBuilder = _moduleBuilder.DefineType(
                     dynamicTypeName,
                     TypeAttributes.Class | TypeAttributes.Sealed,
                     definition.ProxyBase,
-                    new Type[] { definition.TypeInterface });
-
-	       
-            var newType = new TypeDefinition(
-                null, 
-                dynamicTypeName, 
-                Mono.Cecil.TypeAttributes.Class | Mono.Cecil.TypeAttributes.Sealed, 
-                definition.ProxyBaseReference);
+                    new [] { definition.TypeInterface });
+            
 
             // This defines the IService<typeInterface> interface.
             if(definition.IsDynamicService)
             {
-                
                 typeBuilder.AddInterfaceImplementation(typeof(IServiceUntyped));
 
                 // The proxy object implements both typeInterface and IService<typeInterface> interfaces.
-                Type serviceInterfaceType = typeof(IService<>).MakeGenericType(new Type[] { definition.TypeInterface });
+                var serviceInterfaceType = typeof(IService<>).MakeGenericType(definition.TypeInterface);
                 typeBuilder.AddInterfaceImplementation(serviceInterfaceType);
 
-                serviceInterfaceType = typeof(IOptionalService<>).MakeGenericType(new Type[] { definition.TypeInterface });
+                serviceInterfaceType = typeof(IOptionalService<>).MakeGenericType(definition.TypeInterface);
                 typeBuilder.AddInterfaceImplementation(serviceInterfaceType);
 
-                serviceInterfaceType = typeof(IOptionalRecommendedService<>).MakeGenericType(new Type[] { definition.TypeInterface });
+                serviceInterfaceType = typeof(IOptionalRecommendedService<>).MakeGenericType(definition.TypeInterface);
                 typeBuilder.AddInterfaceImplementation(serviceInterfaceType);
 
-                serviceInterfaceType = typeof(IRunnableService<>).MakeGenericType(new Type[] { definition.TypeInterface });
+                serviceInterfaceType = typeof(IRunnableService<>).MakeGenericType(definition.TypeInterface);
                 typeBuilder.AddInterfaceImplementation(serviceInterfaceType);
 
-                serviceInterfaceType = typeof(IRunnableRecommendedService<>).MakeGenericType(new Type[] { definition.TypeInterface });
+                serviceInterfaceType = typeof(IRunnableRecommendedService<>).MakeGenericType(definition.TypeInterface);
                 typeBuilder.AddInterfaceImplementation(serviceInterfaceType);
 
-                serviceInterfaceType = typeof(IRunningService<>).MakeGenericType(new Type[] { definition.TypeInterface });
+                serviceInterfaceType = typeof(IRunningService<>).MakeGenericType(definition.TypeInterface);
                 typeBuilder.AddInterfaceImplementation(serviceInterfaceType);
             }
 
@@ -889,10 +878,9 @@ namespace YodiiStaticProxy.Fody.Service
 
             pg.ImplementInterface();
 
-            object unavailableImpl = CreateUnavailableImplementation(definition.TypeInterface, dynamicTypeName + "_UN");
+            CreateUnavailableImplementation(definition.TypeInterface, dynamicTypeName + "_UN");
 
-            return pg.Finalize(unavailableImpl);
-
+            return pg.FinalizeStatic();
         }
     }
 }
