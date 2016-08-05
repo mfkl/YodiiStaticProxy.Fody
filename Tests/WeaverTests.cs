@@ -1,55 +1,69 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using Mono.Cecil;
 using NUnit.Framework;
 using YodiiStaticProxy.Fody;
+using YodiiStaticProxy.Fody.Service;
 
-[TestFixture]
-public class WeaverTests
+namespace Tests
 {
-    Assembly assembly;
-    string newAssemblyPath;
-    string assemblyPath;
-
-    [TestFixtureSetUp]
-    public void Setup()
+    [TestFixture]
+    public class WeaverTests
     {
-        var projectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\AssemblyToProcess\AssemblyToProcess.csproj"));
-        assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\AssemblyToProcess.dll");
+        Assembly assembly;
+        string newAssemblyPath;
+        string assemblyPath;
+
+        [TestFixtureSetUp]
+        public void Setup()
+        {
+            var projectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\AssemblyToProcess\AssemblyToProcess.csproj"));
+            assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\AssemblyToProcess.dll");
 #if (!DEBUG)
         assemblyPath = assemblyPath.Replace("Debug", "Release");
 #endif
 
-        newAssemblyPath = assemblyPath.Replace(".dll", "2.dll");
-        File.Copy(assemblyPath, newAssemblyPath, true);
+            newAssemblyPath = assemblyPath.Replace(".dll", "2.dll");
+            File.Copy(assemblyPath, newAssemblyPath, true);
 
-        var moduleDefinition = ModuleDefinition.ReadModule(newAssemblyPath);
-        var weavingTask = new ModuleWeaver
+            var moduleDefinition = ModuleDefinition.ReadModule(newAssemblyPath);
+            var weavingTask = new ModuleWeaver
+            {
+                ModuleDefinition = moduleDefinition
+            };
+
+            weavingTask.Execute();
+            moduleDefinition.Write(newAssemblyPath);
+
+            assembly = Assembly.LoadFile(newAssemblyPath);
+        }
+
+        [Test]
+        public void ValidateHelloWorldIsInjected()
         {
-            ModuleDefinition = moduleDefinition
-        };
+            var files = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.yodiiproxy");
 
-        weavingTask.Execute();
-        moduleDefinition.Write(newAssemblyPath);
+            var formatter = new BinaryFormatter();
+            formatter.Binder = new ProxyTypeConverter();
+//            ServiceProxyBase proxy;
+            object proxy;
+            using(var stream = new FileStream(files.First(), FileMode.Open, FileAccess.Read))
+            {
+                proxy = formatter.Deserialize(stream);
+            }
 
-        assembly = Assembly.LoadFile(newAssemblyPath);
-    }
-
-    [Test]
-    public void ValidateHelloWorldIsInjected()
-    {
-        var type = assembly.GetType("Hello");
-        var instance = (dynamic)Activator.CreateInstance(type);
-
-        Assert.AreEqual("Hello World", instance.World());
-    }
+            Assert.True(proxy != null);
+        }
 
 #if(DEBUG)
-    [Test]
-    public void PeVerify()
-    {
-        Verifier.Verify(assemblyPath,newAssemblyPath);
-    }
+        [Test]
+        public void PeVerify()
+        {
+            Verifier.Verify(assemblyPath,newAssemblyPath);
+        }
 #endif
+    }
 }

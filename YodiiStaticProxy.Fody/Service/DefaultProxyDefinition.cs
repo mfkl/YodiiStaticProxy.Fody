@@ -33,9 +33,8 @@ namespace YodiiStaticProxy.Fody.Service
 		Type _typeInterface;
         CatchExceptionGeneration _errorCatch;
         bool _isDynamicService;
-	    readonly TypeReference _proxyBaseType;
 
-        public DefaultProxyDefinition(Type typeInterface, TypeReference proxyBaseType, CatchExceptionGeneration errorCatch)
+        public DefaultProxyDefinition(Type typeInterface, CatchExceptionGeneration errorCatch = CatchExceptionGeneration.HonorIgnoreExceptionAttribute)
         {
             if(!typeInterface.IsInterface)
             {
@@ -44,7 +43,6 @@ namespace YodiiStaticProxy.Fody.Service
             _typeInterface = typeInterface;
             _errorCatch = errorCatch;
             _isDynamicService = typeof(IYodiiService).IsAssignableFrom(typeInterface);
-            _proxyBaseType = proxyBaseType;
         }
 
         public Type TypeInterface => _typeInterface;
@@ -53,8 +51,6 @@ namespace YodiiStaticProxy.Fody.Service
 
 	    public Type ProxyBase => typeof( ServiceProxyBase );
   
-        public TypeReference ProxyBaseReference => _proxyBaseType;
-
         public ProxyOptions GetEventOptions( EventInfo e )
         {
             ProxyOptions opt = new ProxyOptions();

@@ -26,27 +26,31 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using CK.Core;
 using Yodii.Model;
 using YodiiStaticProxy.Fody.Plugin;
 
 namespace YodiiStaticProxy.Fody.Service
 {
+    [Serializable]
     internal struct MEntry
     {
         public MethodInfo Method;
         public ServiceLogMethodOptions LogOptions;
     }
 
+    [Serializable]
     internal struct EEntry
     {
         public EventInfo Event;
         public ServiceLogEventOptions LogOptions;
     }
 
-    internal abstract class ServiceProxyBase : IServiceUntyped, IYodiiService
+    [Serializable]
+    public class ServiceProxyBase : IServiceUntyped, IYodiiService, ISerializable
 	{
-        readonly Type _typeInterface;
+        public readonly Type TypeInterface;
         readonly MEntry[] _mRefs;
         readonly EEntry[] _eRefs;
         PluginProxyBase _impl;
@@ -55,10 +59,10 @@ namespace YodiiStaticProxy.Fody.Service
         ServiceStatus _status;
         public bool IsExternalService;
 
-		protected ServiceProxyBase( object unavailableImpl, Type typeInterface, IList<MethodInfo> mRefs, IList<EventInfo> eRefs )
+        protected ServiceProxyBase( object unavailableImpl, Type typeInterface, IList<MethodInfo> mRefs, IList<EventInfo> eRefs )
 		{
             Debug.Assert( mRefs.All( r => r != null ) && mRefs.Distinct().SequenceEqual( mRefs ) );
-            _typeInterface = typeInterface;
+            TypeInterface = typeInterface;
             RawImpl = _unavailableImpl = unavailableImpl;
             _mRefs = new MEntry[mRefs.Count];
             for( int i = 0; i < mRefs.Count; i++ )
@@ -90,6 +94,7 @@ namespace YodiiStaticProxy.Fody.Service
             get { return _eRefs; }
         }
 
+        [Serializable]
         class Event : ServiceStatusChangedEventArgs
         {
             readonly Action<Action<IYodiiEngineExternal>> _postStart;
@@ -186,7 +191,7 @@ namespace YodiiStaticProxy.Fody.Service
 			}
 		}
 
-		protected abstract object RawImpl { get; set; }
+		protected virtual object RawImpl { get; set; }
 
         internal PluginProxyBase Implementation { get { return _impl; } }
 
@@ -198,7 +203,7 @@ namespace YodiiStaticProxy.Fody.Service
         /// <param name="implementation">Plugin implementation.</param>
         public void SetExternalImplementation( object implementation )
         {
-            if( !IsExternalService ) throw new CKException( "ServiceIsPluginBased", _typeInterface );
+            if( !IsExternalService ) throw new CKException( "ServiceIsPluginBased", TypeInterface );
             if( implementation == null ) implementation = _unavailableImpl;
             if( implementation != RawImpl )
             {
@@ -208,7 +213,7 @@ namespace YodiiStaticProxy.Fody.Service
 
         internal void SetPluginImplementation( PluginProxyBase implementation )
         {
-            if( IsExternalService ) throw new CKException( "ServiceIsAlreadyExternal", _typeInterface, implementation.GetType().AssemblyQualifiedName );
+            if( IsExternalService ) throw new CKException( "ServiceIsAlreadyExternal", TypeInterface, implementation.GetType().AssemblyQualifiedName );
             _impl = implementation;
             if( _impl == null )
             {
@@ -227,17 +232,17 @@ namespace YodiiStaticProxy.Fody.Service
         /// </summary>
         /// <returns>The log configuration that must be used.</returns>
         [DebuggerNonUserCode]
-        protected ServiceLogMethodOptions GetLoggerForRunningCall( int iMethodMRef, out LogMethodEntry logger )
+        internal ServiceLogMethodOptions GetLoggerForRunningCall( int iMethodMRef, out LogMethodEntry logger )
         {
             var blocker = _serviceHost.CallServiceBlocker;
-            if( blocker != null ) throw blocker( _typeInterface );
+            if( blocker != null ) throw blocker( TypeInterface );
             if( _impl == null || _impl.Status == PluginStatus.Null )
             {
-                throw new ServiceNotAvailableException( _typeInterface );
+                throw new ServiceNotAvailableException( TypeInterface );
             }
             if( _impl.Status == PluginStatus.Stopped )
             {
-                throw new ServiceStoppedException( _typeInterface );
+                throw new ServiceStoppedException( TypeInterface );
             }
             MEntry me = _mRefs[iMethodMRef];
             ServiceLogMethodOptions o = me.LogOptions;
@@ -252,13 +257,13 @@ namespace YodiiStaticProxy.Fody.Service
         /// </summary>
         /// <returns>The log configuration that must be used.</returns>
         [DebuggerNonUserCode]
-        protected ServiceLogMethodOptions GetLoggerForNotDisabledCall( int iMethodMRef, out LogMethodEntry logger )
+        internal ServiceLogMethodOptions GetLoggerForNotDisabledCall( int iMethodMRef, out LogMethodEntry logger )
         {
             var blocker = _serviceHost.CallServiceBlocker;
-            if( blocker != null ) throw blocker( _typeInterface );
+            if( blocker != null ) throw blocker( TypeInterface );
             if( _impl == null || _impl.Status == PluginStatus.Null )
             {
-                throw new ServiceNotAvailableException( _typeInterface );
+                throw new ServiceNotAvailableException( TypeInterface );
             }
             MEntry me = _mRefs[iMethodMRef];
             ServiceLogMethodOptions o = me.LogOptions;
@@ -273,10 +278,10 @@ namespace YodiiStaticProxy.Fody.Service
         /// </summary>
         /// <returns>The log configuration that must be used.</returns>
         [DebuggerNonUserCode]
-        protected ServiceLogMethodOptions GetLoggerForAnyCall( int iMethodMRef, out LogMethodEntry logger )
+        internal ServiceLogMethodOptions GetLoggerForAnyCall( int iMethodMRef, out LogMethodEntry logger )
         {
             var blocker = _serviceHost.CallServiceBlocker;
-            if( blocker != null ) throw blocker( _typeInterface );
+            if( blocker != null ) throw blocker( TypeInterface );
             MEntry me = _mRefs[iMethodMRef];
             ServiceLogMethodOptions o = me.LogOptions;
             logger = o == ServiceLogMethodOptions.None ? null : _serviceHost.LogMethodEnter( me.Method, o );
@@ -284,14 +289,14 @@ namespace YodiiStaticProxy.Fody.Service
         }
 
         [DebuggerNonUserCode]
-        protected void LogEndCall( LogMethodEntry e )
+        internal void LogEndCall( LogMethodEntry e )
         {
             Debug.Assert( e != null );
             _serviceHost.LogMethodSuccess( e );
         }
 
         [DebuggerNonUserCode]
-        protected void LogEndCallWithValue( LogMethodEntry e, object retValue )
+        internal void LogEndCallWithValue( LogMethodEntry e, object retValue )
         {
             Debug.Assert( e != null );
             e._returnValue = retValue;
@@ -299,7 +304,7 @@ namespace YodiiStaticProxy.Fody.Service
         }
 
         [DebuggerNonUserCode]
-        protected void OnCallException( int iMethodMRef, Exception ex, LogMethodEntry e )
+        internal void OnCallException( int iMethodMRef, Exception ex, LogMethodEntry e )
         {
             if( e != null )
             {
@@ -320,7 +325,7 @@ namespace YodiiStaticProxy.Fody.Service
         /// thrown back to the buggy service.
         /// </summary>
         [DebuggerNonUserCode]
-        protected bool GetLoggerEventForRunningCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
+        internal bool GetLoggerEventForRunningCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
         {
             EEntry e = _eRefs[iEventMRef];
             logOptions = e.LogOptions;
@@ -334,8 +339,8 @@ namespace YodiiStaticProxy.Fody.Service
                         _serviceHost.LogEventNotRunningError( e.Event, isDisabled );
                     return false;
                 }
-                if( isDisabled ) throw new ServiceNotAvailableException( _typeInterface );
-                else throw new ServiceStoppedException( _typeInterface );
+                if( isDisabled ) throw new ServiceNotAvailableException( TypeInterface );
+                else throw new ServiceStoppedException( TypeInterface );
             }
             logOptions &= ServiceLogEventOptions.CreateEntryMask;
             entry = logOptions != 0 ? _serviceHost.LogEventEnter( e.Event, logOptions ) : null;   
@@ -343,7 +348,7 @@ namespace YodiiStaticProxy.Fody.Service
         }
 
         [DebuggerNonUserCode]
-        protected bool GetLoggerEventForNotDisabledCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
+        internal bool GetLoggerEventForNotDisabledCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
         {
             EEntry e = _eRefs[iEventMRef];
             logOptions = e.LogOptions & ServiceLogEventOptions.CreateEntryMask;
@@ -356,14 +361,14 @@ namespace YodiiStaticProxy.Fody.Service
                         _serviceHost.LogEventNotRunningError( e.Event, true );
                     return false;
                 }
-                throw new ServiceNotAvailableException( _typeInterface );
+                throw new ServiceNotAvailableException( TypeInterface );
             }
             entry = logOptions != 0 ? _serviceHost.LogEventEnter( e.Event, logOptions ) : null;
             return true;
         }
 
         [DebuggerNonUserCode]
-        protected bool GetLoggerEventForAnyCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
+        internal bool GetLoggerEventForAnyCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
         {
             EEntry e = _eRefs[iEventMRef];
             logOptions = e.LogOptions & ServiceLogEventOptions.CreateEntryMask;
@@ -372,7 +377,7 @@ namespace YodiiStaticProxy.Fody.Service
         }
 
         [DebuggerNonUserCode]
-        protected void LogEndRaise( LogEventEntry e )
+        internal void LogEndRaise( LogEventEntry e )
         {
             Debug.Assert( e != null );
             _serviceHost.LogEventEnd( e );
@@ -390,7 +395,7 @@ namespace YodiiStaticProxy.Fody.Service
         /// <param name="ee">The log entry if it has been created. Will be created if needed.</param>
         /// <returns>True to silently swallow the exception.</returns>
         [DebuggerNonUserCode]
-        protected bool OnEventHandlingException( int iEventMRef, MethodInfo target, Exception ex, ref LogEventEntry ee )
+        internal bool OnEventHandlingException( int iEventMRef, MethodInfo target, Exception ex, ref LogEventEntry ee )
 		{
             EEntry e = _eRefs[iEventMRef];
             if( (e.LogOptions & ServiceLogEventOptions.LogErrors) != 0 )
@@ -408,6 +413,23 @@ namespace YodiiStaticProxy.Fody.Service
         }
 
         #endregion
-    }
 
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("TypeInterface", TypeInterface);
+            info.AddValue("_unavailableImpl", _unavailableImpl);
+            info.AddValue("_mRefs", _mRefs);
+            info.AddValue("_eRefs", _eRefs);
+            info.AddValue("_status", _status);
+        }
+
+        ServiceProxyBase(SerializationInfo info, StreamingContext context)
+        {
+            info.GetValue("TypeInterface", typeof (Type));
+            info.GetValue("_unavailableImpl", typeof (object));
+            info.GetValue("_mRefs", typeof(MEntry[]));
+            info.GetValue("_eRefs", typeof(EEntry[]));
+            info.GetValue("_status", typeof(ServiceStatus));
+        }
+    }
 }

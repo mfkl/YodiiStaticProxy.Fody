@@ -1,4 +1,4 @@
-#region LGPL License
+﻿#region LGPL License
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\ProxyFactory.cs) is part of CiviKey. 
 *  
