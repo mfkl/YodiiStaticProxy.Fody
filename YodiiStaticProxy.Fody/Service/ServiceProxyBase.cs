@@ -33,22 +33,19 @@ using YodiiStaticProxy.Fody.Plugin;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-    [Serializable]
     internal struct MEntry
     {
         public MethodInfo Method;
         public ServiceLogMethodOptions LogOptions;
     }
 
-    [Serializable]
     internal struct EEntry
     {
         public EventInfo Event;
         public ServiceLogEventOptions LogOptions;
     }
 
-    [Serializable]
-    public class ServiceProxyBase : IServiceUntyped, IYodiiService, ISerializable
+    public class ServiceProxyBase : IServiceUntyped, IYodiiService
 	{
         public readonly Type TypeInterface;
         readonly MEntry[] _mRefs;
@@ -94,7 +91,6 @@ namespace YodiiStaticProxy.Fody.Service
             get { return _eRefs; }
         }
 
-        [Serializable]
         class Event : ServiceStatusChangedEventArgs
         {
             readonly Action<Action<IYodiiEngineExternal>> _postStart;
@@ -413,23 +409,5 @@ namespace YodiiStaticProxy.Fody.Service
         }
 
         #endregion
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("TypeInterface", TypeInterface);
-            info.AddValue("_unavailableImpl", _unavailableImpl);
-            info.AddValue("_mRefs", _mRefs);
-            info.AddValue("_eRefs", _eRefs);
-            info.AddValue("_status", _status);
-        }
-
-        ServiceProxyBase(SerializationInfo info, StreamingContext context)
-        {
-            info.GetValue("TypeInterface", typeof (Type));
-            info.GetValue("_unavailableImpl", typeof (object));
-            info.GetValue("_mRefs", typeof(MEntry[]));
-            info.GetValue("_eRefs", typeof(EEntry[]));
-            info.GetValue("_status", typeof(ServiceStatus));
-        }
     }
 }

@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security;
 using System.Threading;
 using CK.Reflection;
 using Mono.Cecil;
@@ -51,14 +52,20 @@ namespace YodiiStaticProxy.Fody.Service
 		static readonly MethodInfo _delegateRemove;
         static readonly MethodInfo _untypedServiceGetMethod = typeof( IServiceUntyped ).GetProperty( "Service" ).GetGetMethod();
 	    static AssemblyBuilder _assemblyBuilder;
+	    static AssemblyName _assemblyName;
 
-	    static ProxyFactory()
+        static ProxyFactory()
 		{
-            AssemblyName assemblyName = new AssemblyName("CKProxyAssembly");
-		    //var assemblyName = WeavingInformation.LoadedAssembly.GetName();
+            var assemblyLocation = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\lib"));
+            var dir = Directory.CreateDirectory(assemblyLocation);
+            var ldir = dir.FullName;
 
-            assemblyName.Version = new Version( 1, 0, 0, 0 );
-           
+            _assemblyName = new AssemblyName("YodiiProxy")
+            {
+                Version = new Version(1, 0, 0, 0),
+                CodeBase = ldir
+            };
+
 //            StrongNameKeyPair kp;
 //            using( Stream stream = Assembly.GetAssembly( typeof( ProxyFactory ) ).GetManifestResourceStream( "Yodii.Host.DynamicKeyPair.DynamicKeyPair.snk" ) )
 //            {
@@ -76,19 +83,18 @@ namespace YodiiStaticProxy.Fody.Service
 //            }
 //            assemblyName.KeyPair = kp;
 
-			// Creates a new Assembly for running only (not saved).
+            // Creates a new Assembly for running ans saving.
+            _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave, assemblyLocation);
             
-			_assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly( assemblyName, AssemblyBuilderAccess.RunAndSave );
-			// Creates a new Module
-			_moduleBuilder = _assemblyBuilder.DefineDynamicModule( "ProxiesModule" );
-            
+            // Creates a new Module
+            _moduleBuilder = _assemblyBuilder.DefineDynamicModule("ProxiesModule", _assemblyName.Name + ".dll", true );
+
             _delegateGetInvocationList = typeof( Delegate ).GetMethod( "GetInvocationList", Type.EmptyTypes );
 			_delegateGetMethod = typeof( Delegate ).GetMethod( "get_Method", Type.EmptyTypes );
 
-			Type[] paramTwoDelegates = new Type[] { typeof( Delegate ), typeof( Delegate ) };
+			Type[] paramTwoDelegates = { typeof( Delegate ), typeof( Delegate ) };
 			_delegateCombine = typeof( Delegate ).GetMethod( "Combine", paramTwoDelegates );
 			_delegateRemove = typeof( Delegate ).GetMethod( "Remove", paramTwoDelegates );
-
 		}
 
         class ProxyGenerator
@@ -99,7 +105,6 @@ namespace YodiiStaticProxy.Fody.Service
             HashSet<MethodInfo> _processedMethods;
             List<MethodInfo> _mRefs;
             List<EventInfo> _eRefs;
-
 
             public ProxyGenerator( TypeBuilder typeBuilder, IProxyDefinition definition )
             {
@@ -199,30 +204,11 @@ namespace YodiiStaticProxy.Fody.Service
                 ImplementRemainingMethods();
             }
 
-            public ServiceProxyBase Finalize( object unavailableImpl )
+            public void FinalizeStatic()
             {
-                Type proxyType = _typeBuilder.CreateType();
-                ServiceProxyBase p = (ServiceProxyBase)Activator.CreateInstance( proxyType, unavailableImpl, _definition.TypeInterface, _mRefs, _eRefs );
-                return p;
+                _typeBuilder.CreateType();
             }
-
-
-            public void FinalizeStatic(object unavailableImpl)
-            {
-                var proxyType = _typeBuilder.CreateType();
-                var proxy = (ServiceProxyBase)Activator.CreateInstance(proxyType, unavailableImpl, _definition.TypeInterface, _mRefs, _eRefs);
-                SerializeAndStoreProxy(proxy);
-            }
-
-            void SerializeAndStoreProxy(ServiceProxyBase proxy)
-            {
-                var formatter = new BinaryFormatter();
-                using (var stream = new FileStream(proxy.TypeInterface + ".yodiiproxy", FileMode.Create))
-                {
-                    formatter.Serialize(stream, proxy);
-                }
-            }
-
+            
             void ImplementProperties()
             {
                 foreach( PropertyInfo p in ReflectionHelper.GetFlattenProperties( _definition.TypeInterface ) )
@@ -701,7 +687,7 @@ namespace YodiiStaticProxy.Fody.Service
 
             void SetDebuggerStepThroughAttribute( MethodBuilder mB )
             {
-                ConstructorInfo ctor = typeof( System.Diagnostics.DebuggerStepThroughAttribute ).GetConstructor( Type.EmptyTypes );
+                ConstructorInfo ctor = typeof( DebuggerStepThroughAttribute ).GetConstructor( Type.EmptyTypes );
                 CustomAttributeBuilder attr = new CustomAttributeBuilder( ctor, new object[0] );
                 mB.SetCustomAttribute( attr );
             }
@@ -754,66 +740,8 @@ namespace YodiiStaticProxy.Fody.Service
                 return mB;
             }
         }
-
-		/// <summary>
-		/// Creates a proxyfied interface according to the given definition.
-		/// </summary>
-		/// <param name="definition">Definition of the proxy to build.</param>
-		/// <returns></returns>
-//		internal static ServiceProxyBase CreateProxy( IProxyDefinition definition )
-//		{
-//			Debug.Assert( definition.TypeInterface.IsInterface, "This check MUST be done by ProxyDefinition implementation." );
-//
-//			string dynamicTypeName = String.Format( "{0}_Proxy_{1}", definition.TypeInterface.Name, Interlocked.Increment( ref _typeID ) );
-//
-//            // Defines a public sealed class that implements typeInterface only.
-//            TypeBuilder typeBuilder = _moduleBuilder.DefineType(
-//                    dynamicTypeName,
-//                    TypeAttributes.Class | TypeAttributes.Sealed,
-//                    definition.ProxyBase,
-//                    new Type[] { definition.TypeInterface } );
-//
-//            // This defines the IService<typeInterface> interface.
-//            if( definition.IsDynamicService )
-//            {
-//                typeBuilder.AddInterfaceImplementation( typeof(IServiceUntyped) );
-//                
-//                // The proxy object implements both typeInterface and IService<typeInterface> interfaces.
-//                Type serviceInterfaceType = typeof( IService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-//
-//                serviceInterfaceType = typeof( IOptionalService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-//
-//                serviceInterfaceType = typeof( IOptionalRecommendedService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-//
-//                serviceInterfaceType = typeof( IRunnableService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-//
-//                serviceInterfaceType = typeof( IRunnableRecommendedService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-//
-//                serviceInterfaceType = typeof( IRunningService<> ).MakeGenericType( new Type[] { definition.TypeInterface } );
-//                typeBuilder.AddInterfaceImplementation( serviceInterfaceType );
-//            }
-//            
-//            ProxyGenerator pg = new ProxyGenerator( typeBuilder, definition );
-//
-//            pg.DefineConstructor();
-//
-//			pg.DefineServiceProperty();
-//
-//			pg.DefineImplementationProperty();
-//
-//            pg.ImplementInterface();
-//
-//            object unavailableImpl = CreateUnavailableImplementation( definition.TypeInterface, dynamicTypeName + "_UN" );
-//
-//			return pg.Finalize( unavailableImpl );
-//		}
-
-        static object CreateUnavailableImplementation( Type interfaceType, string dynamicTypeName )
+		
+        static void CreateUnavailableImplementation( Type interfaceType, string dynamicTypeName )
         {
             // Defines a public sealed class that only implements typeInterface 
             // and for which all methods throw ServiceNotAvailableException.
@@ -837,11 +765,14 @@ namespace YodiiStaticProxy.Fody.Service
                 g.Emit( OpCodes.Throw );
             }
             
-            var unavailableType = typeBuilderNotAvailable.CreateType();
-            var unavailableImpl = Activator.CreateInstance(unavailableType);
-            return unavailableImpl;
+            typeBuilderNotAvailable.CreateType();
         }
 
+        /// <summary>
+		/// Creates a proxyfied interface according to the given definition.
+		/// </summary>
+		/// <param name="definition">Definition of the proxy to build.</param>
+		/// <returns></returns>
 	    public static void CreateStaticProxy(DefaultProxyDefinition definition)
 	    {
             Debug.Assert(definition.TypeInterface.IsInterface, "This check MUST be done by ProxyDefinition implementation.");
@@ -854,7 +785,7 @@ namespace YodiiStaticProxy.Fody.Service
                     TypeAttributes.Class | TypeAttributes.Sealed |TypeAttributes.Serializable,
                     definition.ProxyBase,
                     new [] { definition.TypeInterface });
-
+            
             // This defines the IService<typeInterface> interface.
             if(definition.IsDynamicService)
             {
@@ -890,18 +821,11 @@ namespace YodiiStaticProxy.Fody.Service
 
             pg.ImplementInterface();
 
-            var unavailableImpl = CreateUnavailableImplementation(definition.TypeInterface, dynamicTypeName + "_UN");
+            CreateUnavailableImplementation(definition.TypeInterface, dynamicTypeName + "_UN");
 
-            pg.FinalizeStatic(unavailableImpl);
-        }
+            pg.FinalizeStatic();
 
-
-    }
-
-    public sealed class ProxyTypeConverter : SerializationBinder {
-        public override Type BindToType(string assemblyName, string typeName)
-        {
-            return typeof (ServiceProxyBase);
+            _assemblyBuilder.Save(_assemblyName.Name + ".dll");
         }
     }
 }

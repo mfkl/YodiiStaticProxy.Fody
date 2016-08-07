@@ -2,68 +2,52 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using Mono.Cecil;
 using NUnit.Framework;
 using YodiiStaticProxy.Fody;
-using YodiiStaticProxy.Fody.Service;
 
 namespace Tests
 {
     [TestFixture]
     public class WeaverTests
     {
-        Assembly assembly;
-        string newAssemblyPath;
-        string assemblyPath;
-
         [TestFixtureSetUp]
         public void Setup()
         {
-            var projectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\AssemblyToProcess\AssemblyToProcess.csproj"));
-            assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\AssemblyToProcess.dll");
-#if (!DEBUG)
-        assemblyPath = assemblyPath.Replace("Debug", "Release");
-#endif
+            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolverFix.HandleAssemblyResolve;
 
-            newAssemblyPath = assemblyPath.Replace(".dll", "2.dll");
-            File.Copy(assemblyPath, newAssemblyPath, true);
-
-            var moduleDefinition = ModuleDefinition.ReadModule(newAssemblyPath);
-            var weavingTask = new ModuleWeaver
-            {
-                ModuleDefinition = moduleDefinition
-            };
+            var weavingTask = new ModuleWeaver();
 
             weavingTask.Execute();
-            moduleDefinition.Write(newAssemblyPath);
-
-            assembly = Assembly.LoadFile(newAssemblyPath);
         }
 
         [Test]
-        public void ValidateHelloWorldIsInjected()
+        public void ValidateDynamicProxyTypesAreCreated()
         {
-            var files = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.yodiiproxy");
+            var folderPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\lib"));
+            var assemblyName = "YodiiProxy.dll";
+            var finalPath = Path.Combine(folderPath, assemblyName);
 
-            var formatter = new BinaryFormatter();
-            formatter.Binder = new ProxyTypeConverter();
-//            ServiceProxyBase proxy;
-            object proxy;
-            using(var stream = new FileStream(files.First(), FileMode.Open, FileAccess.Read))
+            var assembly = Assembly.LoadFile(finalPath);
+
+            var types = assembly.DefinedTypes.ToList();
+            Assert.AreEqual(types[0].Name, "IService_Proxy_1");
+            Assert.AreEqual(types[1].Name, "IService_Proxy_1_UN");
+        }
+
+        public static class AssemblyResolverFix
+        {
+            public static Assembly HandleAssemblyResolve(object sender, ResolveEventArgs args)
             {
-                proxy = formatter.Deserialize(stream);
+                return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(ass => ass.FullName == args.Name);
             }
-
-            Assert.True(proxy != null);
         }
 
-#if(DEBUG)
-        [Test]
-        public void PeVerify()
-        {
-            Verifier.Verify(assemblyPath,newAssemblyPath);
-        }
-#endif
+//#if(DEBUG)
+//        [Test]
+//        public void PeVerify()
+//        {
+//            Verifier.Verify(assemblyPath,newAssemblyPath);
+//        }
+//#endif
     }
 }
