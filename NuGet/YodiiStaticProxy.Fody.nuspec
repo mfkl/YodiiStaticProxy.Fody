@@ -4,17 +4,17 @@
     <id>YodiiStaticProxy.Fody</id>
     <version>$version$</version>
     <title>YodiiStaticProxy.Fody</title>
-    <authors>Simon Cropp</authors>
-    <owners>Simon Cropp</owners>
+    <authors>mfkl</authors>
+    <owners>mfkl</owners>
     <developmentDependency>true</developmentDependency>
     <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
     <projectUrl>http://github.com/Fody/BasicFodyAddin</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <iconUrl>https://raw.github.com/Fody/BasicFodyAddin/master/Icons/package_icon.png</iconUrl>
-    <description>A sample Fody add-in.</description>
+    <description>Static proxy generation for Yodii.Host</description>
     <summary />
     <language>en-AU</language>
-    <tags>ILWeaving, Fody, Cecil</tags>
+    <tags>ILWeaving, Fody, Cecil, Yodii, DI</tags>
     <dependencies>
       <dependency id="Fody"/>
     </dependencies>
