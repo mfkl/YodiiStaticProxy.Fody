@@ -1,4 +1,4 @@
-#region LGPL License
+﻿#region LGPL License
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\ProxyFactory.cs) is part of CiviKey. 
 *  
@@ -25,20 +25,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security;
 using System.Threading;
 using CK.Reflection;
-using Mono.Cecil;
 using Yodii.Model;
-using FieldAttributes = System.Reflection.FieldAttributes;
-using MethodAttributes = System.Reflection.MethodAttributes;
-using PropertyAttributes = System.Reflection.PropertyAttributes;
-using TypeAttributes = System.Reflection.TypeAttributes;
 
 namespace YodiiStaticProxy.Fody.Service
 {
@@ -60,7 +51,7 @@ namespace YodiiStaticProxy.Fody.Service
             var dir = Directory.CreateDirectory(assemblyLocation);
             var ldir = dir.FullName;
 
-            _assemblyName = new AssemblyName("YodiiProxy")
+            _assemblyName = new AssemblyName("YodiiStaticProxy")
             {
                 Version = new Version(1, 0, 0, 0),
                 CodeBase = ldir

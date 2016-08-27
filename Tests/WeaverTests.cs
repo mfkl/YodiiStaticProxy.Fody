@@ -24,7 +24,7 @@ namespace Tests
         public void ValidateDynamicProxyTypesAreCreated()
         {
             var folderPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\lib"));
-            var assemblyName = "YodiiProxy.dll";
+            var assemblyName = "YodiiStaticProxy.dll";
             var finalPath = Path.Combine(folderPath, assemblyName);
 
             var assembly = Assembly.LoadFile(finalPath);
