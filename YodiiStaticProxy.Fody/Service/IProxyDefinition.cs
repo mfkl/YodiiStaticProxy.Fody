@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\IProxyDefinition.cs) is part of CiviKey. 
 *  
@@ -19,93 +20,94 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
 using System.Reflection;
-using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-	internal class ProxyOptions
-	{
+    internal class ProxyOptions
+    {
         /// <summary>
-        /// The proxified method traps any exception and routes it to <see cref="ServiceProxyBase.OnCallException"/>
-        /// (or <see cref="ServiceProxyBase.OnEventHandlingException"/> during events raising).
-        /// </summary>
-        public bool CatchExceptions;
-
-        /// <summary>
-        /// Defines the behavior of the generated service mehods regarding Stopped or Disabled plugins.
+        ///     Defines the behavior of the generated service mehods regarding Stopped or Disabled plugins.
         /// </summary>
         public enum CheckStatus
         {
             /// <summary>
-            /// No status check is done: calling a method on a disabled or stopped plugin 
-            /// does not throw any exception.
+            ///     No status check is done: calling a method on a disabled or stopped plugin
+            ///     does not throw any exception.
             /// </summary>
             None,
+
             /// <summary>
-            /// Calling a method on a disabled plugin throws a ServiceNotAvailableException.
+            ///     Calling a method on a disabled plugin throws a ServiceNotAvailableException.
             /// </summary>
             NotDisabled,
+
             /// <summary>
-            /// Calling a method on a disabled plugin throws a ServiceNotAvailableException and
-            /// a ServiceStoppedException on a stoped plugin.
+            ///     Calling a method on a disabled plugin throws a ServiceNotAvailableException and
+            ///     a ServiceStoppedException on a stoped plugin.
             /// </summary>
             Running
         }
 
         /// <summary>
-        /// The proxified method will call <see cref="ServiceProxyBase.GetLoggerForRunningCall"/>, <see cref="ServiceProxyBase.GetLoggerForNotDisabledCall"/> 
-        /// or <see cref="ServiceProxyBase.GetLoggerForAnyCall"/> (or the 3 similar ones for events).
+        ///     The proxified method traps any exception and routes it to <see cref="ServiceProxyBase.OnCallException" />
+        ///     (or <see cref="ServiceProxyBase.OnEventHandlingException" /> during events raising).
         /// </summary>
-        public CheckStatus RuntimeCheckStatus;
-	}
-
-
-
-	/// <summary>
-	/// Defines the way a service proxy must be generated. 
-	/// </summary>
-	internal interface IProxyDefinition
-	{
-		/// <summary>
-		/// Gets the interface type that must be proxified.
-		/// </summary>
-		Type TypeInterface { get; }
-
-		/// <summary>
-		/// Gets a type that must be <see cref="ServiceProxyBase"/> or a specialisation of it.
-		/// </summary>
-		Type ProxyBase { get; }
+        public bool CatchExceptions;
 
         /// <summary>
-        /// Gets whether the interface is a <see cref="IYodiiService"/> or not.
+        ///     The proxified method will call <see cref="ServiceProxyBase.GetLoggerForRunningCall" />,
+        ///     <see cref="ServiceProxyBase.GetLoggerForNotDisabledCall" />
+        ///     or <see cref="ServiceProxyBase.GetLoggerForAnyCall" /> (or the 3 similar ones for events).
+        /// </summary>
+        public CheckStatus RuntimeCheckStatus;
+    }
+
+
+    /// <summary>
+    ///     Defines the way a service proxy must be generated.
+    /// </summary>
+    internal interface IProxyDefinition
+    {
+        /// <summary>
+        ///     Gets the interface type that must be proxified.
+        /// </summary>
+        Type TypeInterface { get; }
+
+        /// <summary>
+        ///     Gets a type that must be <see cref="ServiceProxyBase" /> or a specialisation of it.
+        /// </summary>
+        Type ProxyBase { get; }
+
+        /// <summary>
+        ///     Gets whether the interface is a <see cref="IYodiiService" /> or not.
         /// </summary>
         bool IsDynamicService { get; }
 
-		/// <summary>
-		/// Gets for the given event, the options that drives code generation of the raising method.
-		/// </summary>
+        /// <summary>
+        ///     Gets for the given event, the options that drives code generation of the raising method.
+        /// </summary>
         /// <param name="p">The event.</param>
-		/// <returns>A set of options for the proxy.</returns>
-        ProxyOptions GetEventOptions( EventInfo p );
-        
-		/// <summary>
-		/// Gets for the given method property (getter or setter), the options that drives code generation of the method proxy.
-		/// </summary>
+        /// <returns>A set of options for the proxy.</returns>
+        ProxyOptions GetEventOptions(EventInfo p);
+
+        /// <summary>
+        ///     Gets for the given method property (getter or setter), the options that drives code generation of the method proxy.
+        /// </summary>
         /// <param name="p">The property.</param>
-		/// <param name="m">The method (can be the getter or the setter).</param>
-		/// <returns>A set of options for the proxy.</returns>
-        ProxyOptions GetPropertyMethodOptions( PropertyInfo p, MethodInfo m );
+        /// <param name="m">The method (can be the getter or the setter).</param>
+        /// <returns>A set of options for the proxy.</returns>
+        ProxyOptions GetPropertyMethodOptions(PropertyInfo p, MethodInfo m);
 
-		/// <summary>
-		/// Gets for the given method, the options that drives code generation of the method proxy.
-		/// </summary>
-		/// <param name="m">The method.</param>
-		/// <returns>A set of options for the proxy.</returns>
-        ProxyOptions GetMethodOptions( MethodInfo m );
-	}
-
+        /// <summary>
+        ///     Gets for the given method, the options that drives code generation of the method proxy.
+        /// </summary>
+        /// <param name="m">The method.</param>
+        /// <returns>A set of options for the proxy.</returns>
+        ProxyOptions GetMethodOptions(MethodInfo m);
+    }
 }

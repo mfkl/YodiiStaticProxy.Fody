@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogErrorCulprit.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -27,19 +29,18 @@ using System.Reflection;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Base interface that defines a log event that holds an <see cref="Exception"/>.
+    ///     Base interface that defines a log event that holds an <see cref="Exception" />.
     /// </summary>
     public interface ILogErrorCulprit : ILogEntry
     {
         /// <summary>
-        /// The culprit is actually required to define an error. 
-        /// The specialized <see cref="ILogErrorCaught"/> holds an exception but there exist errors 
-        /// that do not have any associated exception to expose.
-        /// This is the case of <see cref="ILogEventNotRunningError"/>: when a plugin raises an event 
-        /// while beeing stopped, it is an error (silently ignored by the kernel), but there is
-        /// no exception to associate with.
+        ///     The culprit is actually required to define an error.
+        ///     The specialized <see cref="ILogErrorCaught" /> holds an exception but there exist errors
+        ///     that do not have any associated exception to expose.
+        ///     This is the case of <see cref="ILogEventNotRunningError" />: when a plugin raises an event
+        ///     while beeing stopped, it is an error (silently ignored by the kernel), but there is
+        ///     no exception to associate with.
         /// </summary>
         MemberInfo Culprit { get; }
-
     }
 }

@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\ServiceStoppedException.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,29 +28,28 @@ using System;
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Exception raised whenever an event is raised by or a method is called on a stopped service. 
+    ///     Exception raised whenever an event is raised by or a method is called on a stopped service.
     /// </summary>
-	[Serializable]
+    [Serializable]
     public class ServiceStoppedException : ServiceNotAvailableException
-	{
+    {
         /// <summary>
-        /// Initializes a new <see cref="ServiceStoppedException"/>.
+        ///     Initializes a new <see cref="ServiceStoppedException" />.
         /// </summary>
         /// <param name="serviceType">Type of the concerned service.</param>
-		public ServiceStoppedException( Type serviceType )
-            : base( serviceType )
-		{
-		}
+        public ServiceStoppedException(Type serviceType)
+            : base(serviceType)
+        {
+        }
 
         /// <summary>
-        /// Initializes a new <see cref="ServiceStoppedException"/>.
+        ///     Initializes a new <see cref="ServiceStoppedException" />.
         /// </summary>
         /// <param name="serviceType">Type of the concerned service.</param>
         /// <param name="message">Detailed message.</param>
-        public ServiceStoppedException( Type serviceType, string message )
-			: base( serviceType, message )
-		{
+        public ServiceStoppedException(Type serviceType, string message)
+            : base(serviceType, message)
+        {
         }
-
     }
 }

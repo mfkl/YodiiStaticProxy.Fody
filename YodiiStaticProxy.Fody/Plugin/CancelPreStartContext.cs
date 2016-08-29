@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\CancelPreStartContext.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Collections.Generic;
@@ -26,20 +28,33 @@ using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-    class CancelPreStartContext : IStopContext
+    internal class CancelPreStartContext : IStopContext
     {
         readonly Dictionary<object, object> _shared;
 
-        public CancelPreStartContext( Dictionary<object, object> shared )
+        public CancelPreStartContext(Dictionary<object, object> shared)
         {
             _shared = shared;
         }
 
-        public bool CancellingPreStart { get { return true; } }
+        public RunningStatus RunningStatus
+        {
+            get { return RunningStatus.Disabled; }
+        }
 
-        public IDictionary<object, object> SharedMemory { get { return _shared; } }
+        public bool CancellingPreStart
+        {
+            get { return true; }
+        }
 
-        public bool HotSwapping { get { return false; } }
+        public IDictionary<object, object> SharedMemory
+        {
+            get { return _shared; }
+        }
 
+        public bool HotSwapping
+        {
+            get { return false; }
+        }
     }
 }

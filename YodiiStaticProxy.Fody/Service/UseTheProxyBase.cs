@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\UseTheProxyBase.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using Yodii.Model;
@@ -26,14 +28,14 @@ using Yodii.Model;
 namespace YodiiStaticProxy.Fody.Service
 {
     /// <summary>
-    /// Fake internal class that forces the compiler to keep <see cref="ServiceProxyBase"/> implementation.
-    /// Without it, get_Status (for instance) is not ignored at compile time and hence, not defined when 
-    /// the ServiceProxyBase is used as the base class by dynamic proxies.
+    ///     Fake internal class that forces the compiler to keep <see cref="ServiceProxyBase" /> implementation.
+    ///     Without it, get_Status (for instance) is not ignored at compile time and hence, not defined when
+    ///     the ServiceProxyBase is used as the base class by dynamic proxies.
     /// </summary>
-    class UseTheProxyBase : ServiceProxyBase, IService<IYodiiService>
+    internal class UseTheProxyBase : ServiceProxyBase, IService<IYodiiService>
     {
         UseTheProxyBase()
-            : base( null, typeof( IYodiiService ), null, null )
+            : base(null, typeof (IYodiiService), null, null)
         {
         }
 
@@ -44,8 +46,8 @@ namespace YodiiStaticProxy.Fody.Service
         }
 
         /// <summary>
-        /// Gets the current <see cref="RunningStatus"/> of the service.
-        /// From Yodii
+        ///     Gets the current <see cref="RunningStatus" /> of the service.
+        ///     From Yodii
         /// </summary>
         public RunningStatus RunningStatus { get; set; }
 

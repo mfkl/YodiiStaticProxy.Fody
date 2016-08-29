@@ -1,4 +1,5 @@
-#region LGPL License
+﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\ServiceProxyBase.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,7 +28,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using CK.Core;
 using Yodii.Model;
 using YodiiStaticProxy.Fody.Plugin;
@@ -45,64 +46,120 @@ namespace YodiiStaticProxy.Fody.Service
         public ServiceLogEventOptions LogOptions;
     }
 
-    public class ServiceProxyBase : IServiceUntyped, IYodiiService
-	{
-        public readonly Type TypeInterface;
-        readonly MEntry[] _mRefs;
-        readonly EEntry[] _eRefs;
-        PluginProxyBase _impl;
-        object _unavailableImpl;
+    public abstract class ServiceProxyBase : IServiceUntyped, IYodiiService
+    {
+        readonly Type _typeInterface;
         ServiceHost _serviceHost;
-        ServiceStatus _status;
+        readonly object _unavailableImpl;
         public bool IsExternalService;
 
-        protected ServiceProxyBase( object unavailableImpl, Type typeInterface, IList<MethodInfo> mRefs, IList<EventInfo> eRefs )
-		{
-            Debug.Assert( mRefs.All( r => r != null ) && mRefs.Distinct().SequenceEqual( mRefs ) );
-            TypeInterface = typeInterface;
+        protected ServiceProxyBase(object unavailableImpl, Type typeInterface, IList<MethodInfo> mRefs,
+            IList<EventInfo> eRefs)
+        {
+            Debug.Assert(mRefs.All(r => r != null) && mRefs.Distinct().SequenceEqual(mRefs));
+            _typeInterface = typeInterface;
             RawImpl = _unavailableImpl = unavailableImpl;
-            _mRefs = new MEntry[mRefs.Count];
-            for( int i = 0; i < mRefs.Count; i++ )
+            MethodEntries = new MEntry[mRefs.Count];
+            for (var i = 0; i < mRefs.Count; i++)
             {
-                _mRefs[i].Method = mRefs[i];
+                MethodEntries[i].Method = mRefs[i];
             }
-            _eRefs = new EEntry[eRefs.Count];
-            for( int i = 0; i < eRefs.Count; i++ )
+            EventEntries = new EEntry[eRefs.Count];
+            for (var i = 0; i < eRefs.Count; i++)
             {
-                _eRefs[i].Event = eRefs[i];
+                EventEntries[i].Event = eRefs[i];
             }
-            _status = ServiceStatus.Stopped;
+            Status = ServiceStatus.Stopped;
         }
 
-        internal void Initialize( ServiceHost serviceHost, bool isExternalService )
+        internal MEntry[] MethodEntries { get; }
+
+        internal EEntry[] EventEntries { get; }
+
+        protected abstract object RawImpl { get; set; }
+
+        internal PluginProxyBase Implementation { get; set; }
+
+        /// <summary>
+        ///     Explicit implementation here: the public Service Property that will be generated
+        ///     will return the T for IService{T}, IOptionalService{T}, etc...
+        /// </summary>
+        IYodiiService IServiceUntyped.Service
+        {
+            get { return this; }
+        }
+
+        public event EventHandler<ServiceStatusChangedEventArgs> ServiceStatusChanged;
+
+        public ServiceStatus Status { get; internal set; }
+
+        internal void Initialize(ServiceHost serviceHost, bool isExternalService)
         {
             _serviceHost = serviceHost;
             IsExternalService = isExternalService;
-            if( isExternalService ) _status = ServiceStatus.Started;
+            if(isExternalService) Status = ServiceStatus.Started;
         }
 
-        internal MEntry[] MethodEntries
+        internal void RaiseStatusChanged(Action<Action<IYodiiEngineExternal>> postStartActionsCollector,
+            PluginProxyBase swappingPlugin = null)
         {
-            get { return _mRefs; }
+            var h = ServiceStatusChanged;
+            if(h != null)
+            {
+                var ev = new Event(this, swappingPlugin, postStartActionsCollector);
+                foreach (EventHandler<ServiceStatusChangedEventArgs> f in h.GetInvocationList())
+                {
+                    f(this, ev);
+                    ev.RestoreImplementation();
+                }
+            }
         }
-        
-        internal EEntry[] EventEntries
+
+        /// <summary>
+        ///     Currently, injection of external services must be totally independent of
+        ///     any Dynamic services: a Service is either a dynamic one, implemented by one (or more) plugin,
+        ///     or an external one that is considered to be persistent and always available and started.
+        /// </summary>
+        /// <param name="implementation">Plugin implementation.</param>
+        public void SetExternalImplementation(object implementation)
         {
-            get { return _eRefs; }
+            if(!IsExternalService) throw new CKException("ServiceIsPluginBased", _typeInterface);
+//            if( !IsExternalService ) throw new CKException( R.ServiceIsPluginBased, _typeInterface );
+            if(implementation == null) implementation = _unavailableImpl;
+            if(implementation != RawImpl)
+            {
+                RawImpl = implementation;
+            }
+        }
+
+        internal void SetPluginImplementation(PluginProxyBase implementation)
+        {
+//            if( IsExternalService ) throw new CKException( R.ServiceIsAlreadyExternal, _typeInterface, implementation.GetType().AssemblyQualifiedName );
+            if(IsExternalService)
+                throw new CKException("ServiceIsAlreadyExternal", _typeInterface,
+                    implementation.GetType().AssemblyQualifiedName);
+            Implementation = implementation;
+            if(Implementation == null)
+            {
+                RawImpl = _unavailableImpl;
+            }
+            else RawImpl = Implementation.RealPluginObject;
         }
 
         class Event : ServiceStatusChangedEventArgs
         {
+            readonly PluginProxyBase _originalImpl;
             readonly Action<Action<IYodiiEngineExternal>> _postStart;
             readonly ServiceProxyBase _service;
-            readonly PluginProxyBase _originalImpl;
             readonly PluginProxyBase _swappingPlugin;
 
-            public Event( ServiceProxyBase s, PluginProxyBase swappingPlugin, Action<Action<IYodiiEngineExternal>> postStartActionsCollector )
+            public Event(ServiceProxyBase s, PluginProxyBase swappingPlugin,
+                Action<Action<IYodiiEngineExternal>> postStartActionsCollector)
             {
-                Debug.Assert( s._status != ServiceStatus.StoppingSwapped || swappingPlugin != null, "Swapping ==> swappingPlugin != null" );
+                Debug.Assert(s.Status != ServiceStatus.StoppingSwapped || swappingPlugin != null,
+                    "Swapping ==> swappingPlugin != null");
                 _service = s;
-                _originalImpl = s._impl;
+                _originalImpl = s.Implementation;
                 _swappingPlugin = swappingPlugin;
                 _postStart = postStartActionsCollector;
             }
@@ -114,276 +171,225 @@ namespace YodiiStaticProxy.Fody.Service
 
             public override bool IsSwapping
             {
-                get { return _service._status.IsSwapping(); }
+                get { return _service.Status.IsSwapping(); }
             }
 
             public override void BindToSwappedPlugin()
             {
-                if( !IsSwapping ) throw new InvalidOperationException( "BindToSwappedPluginMustBeSwapping" );
-                _service._impl = _swappingPlugin;
+//                if( !IsSwapping ) throw new InvalidOperationException( R.BindToSwappedPluginMustBeSwapping );
+                if(!IsSwapping) throw new InvalidOperationException("BindToSwappedPluginMustBeSwapping");
+                _service.Implementation = _swappingPlugin;
             }
 
             internal void RestoreImplementation()
             {
-                if( _swappingPlugin != null ) _service._impl = _originalImpl;
+                if(_swappingPlugin != null) _service.Implementation = _originalImpl;
             }
 
-            public override void TryStart<T>( IService<T> service, StartDependencyImpact impact, Action onSuccess, Action<IYodiiEngineResult> onError )
+            public override void TryStart<T>(IService<T> service, StartDependencyImpact impact, Action onSuccess,
+                Action<IYodiiEngineResult> onError)
             {
-                TryStart( service.Service.GetType().FullName, impact, onSuccess, onError );
+                TryStart(service.Service.GetType().FullName, impact, onSuccess, onError);
             }
 
-            public override void TryStart( string serviceOrPluginFullName, StartDependencyImpact impact, Action onSuccess, Action<IYodiiEngineResult> onError )
+            public override void TryStart(string serviceOrPluginFullName, StartDependencyImpact impact, Action onSuccess,
+                Action<IYodiiEngineResult> onError)
             {
-                if( _postStart == null ) return;
-                Action<IYodiiEngineExternal> a = e => 
+                if(_postStart == null) return;
+                Action<IYodiiEngineExternal> a = e =>
                 {
-                    if( e.IsRunning )
+                    if(e.IsRunning)
                     {
-                        ILiveYodiiItem item = e.LiveInfo.FindYodiiItem( serviceOrPluginFullName );
-                        if( item != null && item.Capability.CanStartWith( impact ) )
+                        var item = e.LiveInfo.FindYodiiItem(serviceOrPluginFullName);
+                        if(item != null && item.Capability.CanStartWith(impact))
                         {
-                            var r = e.StartItem( item, impact );
-                            if( r.Success )
+                            var r = e.StartItem(item, impact);
+                            if(r.Success)
                             {
-                                if( onSuccess != null ) onSuccess();
+                                if(onSuccess != null) onSuccess();
                             }
                             else
                             {
-                                if( onError != null ) onError( r );
+                                if(onError != null) onError(r);
                             }
                         }
                     }
                 };
-                _postStart( a );
+                _postStart(a);
             }
-        }
-
-        /// <summary>
-        /// Explicit implementation here: the public Service Property that will be generated 
-        /// will return the T for IService{T}, IOptionalService{T}, etc...
-        /// </summary>
-        IYodiiService IServiceUntyped.Service { get { return this; } }
-
-		public event EventHandler<ServiceStatusChangedEventArgs> ServiceStatusChanged;
-
-		public ServiceStatus Status
-		{
-            get { return _status; }
-            internal set { _status = value; }
-		}
-
-        internal void RaiseStatusChanged( Action<Action<IYodiiEngineExternal>> postStartActionsCollector, PluginProxyBase swappingPlugin = null )
-		{
-            var h = ServiceStatusChanged;
-            if( h != null )
-			{
-                Event ev = new Event( this, swappingPlugin, postStartActionsCollector );
-                foreach( EventHandler<ServiceStatusChangedEventArgs> f in h.GetInvocationList() )
-                {
-                    f( this, ev );
-                    ev.RestoreImplementation();
-                }
-			}
-		}
-
-		protected virtual object RawImpl { get; set; }
-
-        internal PluginProxyBase Implementation { get { return _impl; } }
-
-        /// <summary>
-        /// Currently, injection of external services must be totally independent of
-        /// any Dynamic services: a Service is either a dynamic one, implemented by one (or more) plugin, 
-        /// or an external one that is considered to be persistent and always available and started.
-        /// </summary>
-        /// <param name="implementation">Plugin implementation.</param>
-        public void SetExternalImplementation( object implementation )
-        {
-            if( !IsExternalService ) throw new CKException( "ServiceIsPluginBased", TypeInterface );
-            if( implementation == null ) implementation = _unavailableImpl;
-            if( implementation != RawImpl )
-            {
-                RawImpl = implementation;
-            }
-        }
-
-        internal void SetPluginImplementation( PluginProxyBase implementation )
-        {
-            if( IsExternalService ) throw new CKException( "ServiceIsAlreadyExternal", TypeInterface, implementation.GetType().AssemblyQualifiedName );
-            _impl = implementation;
-            if( _impl == null )
-            {
-                RawImpl = _unavailableImpl;
-            }
-            else RawImpl = _impl.RealPluginObject;
         }
 
         #region Protected methods called by concrete concrete dynamic classes (event relaying).
 
         /// <summary>
-        /// This method is called whenever a method not marked with <see cref="IgnoreServiceStoppedAttribute"/>
-        /// is called. It throws a <see cref="ServiceStoppedException"/> if the service is stopped or a <see cref="ServiceNotAvailableException"/> for a disabled one.
-        /// It also checks that the call to any service is allowed  (ServiceHost.CallServiceBlocker).
-        /// Otherwise it returns the appropriate log configuration.
+        ///     This method is called whenever a method not marked with <see cref="IgnoreServiceStoppedAttribute" />
+        ///     is called. It throws a <see cref="ServiceStoppedException" /> if the service is stopped or a
+        ///     <see cref="ServiceNotAvailableException" /> for a disabled one.
+        ///     It also checks that the call to any service is allowed  (ServiceHost.CallServiceBlocker).
+        ///     Otherwise it returns the appropriate log configuration.
         /// </summary>
         /// <returns>The log configuration that must be used.</returns>
         [DebuggerNonUserCode]
-        internal ServiceLogMethodOptions GetLoggerForRunningCall( int iMethodMRef, out LogMethodEntry logger )
+        internal ServiceLogMethodOptions GetLoggerForRunningCall(int iMethodMRef, out LogMethodEntry logger)
         {
             var blocker = _serviceHost.CallServiceBlocker;
-            if( blocker != null ) throw blocker( TypeInterface );
-            if( _impl == null || _impl.Status == PluginStatus.Null )
+            if(blocker != null) throw blocker(_typeInterface);
+            if(Implementation == null || Implementation.Status == PluginStatus.Null)
             {
-                throw new ServiceNotAvailableException( TypeInterface );
+                throw new ServiceNotAvailableException(_typeInterface);
             }
-            if( _impl.Status == PluginStatus.Stopped )
+            if(Implementation.Status == PluginStatus.Stopped)
             {
-                throw new ServiceStoppedException( TypeInterface );
+                throw new ServiceStoppedException(_typeInterface);
             }
-            MEntry me = _mRefs[iMethodMRef];
-            ServiceLogMethodOptions o = me.LogOptions;
+            var me = MethodEntries[iMethodMRef];
+            var o = me.LogOptions;
             o &= ServiceLogMethodOptions.CreateEntryMask;
-            logger = o == ServiceLogMethodOptions.None ? null : _serviceHost.LogMethodEnter( me.Method, o );
+            logger = o == ServiceLogMethodOptions.None ? null : _serviceHost.LogMethodEnter(me.Method, o);
             return o;
         }
 
         /// <summary>
-        /// Returns the appropriate log configuration after having checked that the dynamic service is not disabled
-        /// (but it can be stopped). Checks that the call to any service is allowed  (ServiceHost.CallServiceBlocker).
+        ///     Returns the appropriate log configuration after having checked that the dynamic service is not disabled
+        ///     (but it can be stopped). Checks that the call to any service is allowed  (ServiceHost.CallServiceBlocker).
         /// </summary>
         /// <returns>The log configuration that must be used.</returns>
         [DebuggerNonUserCode]
-        internal ServiceLogMethodOptions GetLoggerForNotDisabledCall( int iMethodMRef, out LogMethodEntry logger )
+        internal ServiceLogMethodOptions GetLoggerForNotDisabledCall(int iMethodMRef, out LogMethodEntry logger)
         {
             var blocker = _serviceHost.CallServiceBlocker;
-            if( blocker != null ) throw blocker( TypeInterface );
-            if( _impl == null || _impl.Status == PluginStatus.Null )
+            if(blocker != null) throw blocker(_typeInterface);
+            if(Implementation == null || Implementation.Status == PluginStatus.Null)
             {
-                throw new ServiceNotAvailableException( TypeInterface );
+                throw new ServiceNotAvailableException(_typeInterface);
             }
-            MEntry me = _mRefs[iMethodMRef];
-            ServiceLogMethodOptions o = me.LogOptions;
+            var me = MethodEntries[iMethodMRef];
+            var o = me.LogOptions;
             o &= ServiceLogMethodOptions.CreateEntryMask;
-            logger = o == ServiceLogMethodOptions.None ? null : _serviceHost.LogMethodEnter( me.Method, o );
+            logger = o == ServiceLogMethodOptions.None ? null : _serviceHost.LogMethodEnter(me.Method, o);
             return o;
         }
 
         /// <summary>
-        /// Returns the appropriate log configuration without any runtime status checks except that the call 
-        /// to any service must be allowed (ServiceHost.CallServiceBlocker).
+        ///     Returns the appropriate log configuration without any runtime status checks except that the call
+        ///     to any service must be allowed (ServiceHost.CallServiceBlocker).
         /// </summary>
         /// <returns>The log configuration that must be used.</returns>
         [DebuggerNonUserCode]
-        internal ServiceLogMethodOptions GetLoggerForAnyCall( int iMethodMRef, out LogMethodEntry logger )
+        internal ServiceLogMethodOptions GetLoggerForAnyCall(int iMethodMRef, out LogMethodEntry logger)
         {
             var blocker = _serviceHost.CallServiceBlocker;
-            if( blocker != null ) throw blocker( TypeInterface );
-            MEntry me = _mRefs[iMethodMRef];
-            ServiceLogMethodOptions o = me.LogOptions;
-            logger = o == ServiceLogMethodOptions.None ? null : _serviceHost.LogMethodEnter( me.Method, o );
+            if(blocker != null) throw blocker(_typeInterface);
+            var me = MethodEntries[iMethodMRef];
+            var o = me.LogOptions;
+            logger = o == ServiceLogMethodOptions.None ? null : _serviceHost.LogMethodEnter(me.Method, o);
             return o;
         }
 
         [DebuggerNonUserCode]
-        internal void LogEndCall( LogMethodEntry e )
+        internal void LogEndCall(LogMethodEntry e)
         {
-            Debug.Assert( e != null );
-            _serviceHost.LogMethodSuccess( e );
+            Debug.Assert(e != null);
+            _serviceHost.LogMethodSuccess(e);
         }
 
         [DebuggerNonUserCode]
-        internal void LogEndCallWithValue( LogMethodEntry e, object retValue )
+        internal void LogEndCallWithValue(LogMethodEntry e, object retValue)
         {
-            Debug.Assert( e != null );
+            Debug.Assert(e != null);
             e._returnValue = retValue;
-            _serviceHost.LogMethodSuccess( e );
+            _serviceHost.LogMethodSuccess(e);
         }
 
         [DebuggerNonUserCode]
-        internal void OnCallException( int iMethodMRef, Exception ex, LogMethodEntry e )
+        internal void OnCallException(int iMethodMRef, Exception ex, LogMethodEntry e)
         {
-            if( e != null )
+            if(e != null)
             {
-                _serviceHost.LogMethodError( e, ex );
+                _serviceHost.LogMethodError(e, ex);
             }
             else
             {
-                MEntry me = _mRefs[iMethodMRef];
-                _serviceHost.LogMethodError( me.Method, ex );
+                var me = MethodEntries[iMethodMRef];
+                _serviceHost.LogMethodError(me.Method, ex);
             }
         }
 
         /// <summary>
-        /// This method is called whenever an event not marked with <see cref="IgnoreServiceStoppedAttribute"/>
-        /// is raised. If the service is actually running, it does nothing and returns true.
-        /// If the service is stopped or disabled it throws a <see cref="ServiceStoppedException"/> or returns false
-        /// if <see cref="ServiceLogEventOptions.SilentEventRunningStatusError"/> is set: the event will not be raised and no exceptions will be
-        /// thrown back to the buggy service.
+        ///     This method is called whenever an event not marked with <see cref="IgnoreServiceStoppedAttribute" />
+        ///     is raised. If the service is actually running, it does nothing and returns true.
+        ///     If the service is stopped or disabled it throws a <see cref="ServiceStoppedException" /> or returns false
+        ///     if <see cref="ServiceLogEventOptions.SilentEventRunningStatusError" /> is set: the event will not be raised and no
+        ///     exceptions will be
+        ///     thrown back to the buggy service.
         /// </summary>
         [DebuggerNonUserCode]
-        internal bool GetLoggerEventForRunningCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
+        internal bool GetLoggerEventForRunningCall(int iEventMRef, out LogEventEntry entry,
+            out ServiceLogEventOptions logOptions)
         {
-            EEntry e = _eRefs[iEventMRef];
+            var e = EventEntries[iEventMRef];
             logOptions = e.LogOptions;
-            bool isDisabled = _impl == null || _impl.Status == PluginStatus.Null;
-            if( isDisabled || _impl.Status == PluginStatus.Stopped )
+            var isDisabled = Implementation == null || Implementation.Status == PluginStatus.Null;
+            if(isDisabled || Implementation.Status == PluginStatus.Stopped)
             {
-                if( (logOptions & ServiceLogEventOptions.SilentEventRunningStatusError) != 0 )
+                if((logOptions & ServiceLogEventOptions.SilentEventRunningStatusError) != 0)
                 {
                     entry = null;
-                    if( (logOptions & ServiceLogEventOptions.LogSilentEventRunningStatusError) != 0 )
-                        _serviceHost.LogEventNotRunningError( e.Event, isDisabled );
+                    if((logOptions & ServiceLogEventOptions.LogSilentEventRunningStatusError) != 0)
+                        _serviceHost.LogEventNotRunningError(e.Event, isDisabled);
                     return false;
                 }
-                if( isDisabled ) throw new ServiceNotAvailableException( TypeInterface );
-                else throw new ServiceStoppedException( TypeInterface );
+                if(isDisabled) throw new ServiceNotAvailableException(_typeInterface);
+                throw new ServiceStoppedException(_typeInterface);
             }
             logOptions &= ServiceLogEventOptions.CreateEntryMask;
-            entry = logOptions != 0 ? _serviceHost.LogEventEnter( e.Event, logOptions ) : null;   
+            entry = logOptions != 0 ? _serviceHost.LogEventEnter(e.Event, logOptions) : null;
             return true;
         }
 
         [DebuggerNonUserCode]
-        internal bool GetLoggerEventForNotDisabledCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
+        internal bool GetLoggerEventForNotDisabledCall(int iEventMRef, out LogEventEntry entry,
+            out ServiceLogEventOptions logOptions)
         {
-            EEntry e = _eRefs[iEventMRef];
+            var e = EventEntries[iEventMRef];
             logOptions = e.LogOptions & ServiceLogEventOptions.CreateEntryMask;
-            if( _impl == null || _impl.Status == PluginStatus.Null )
+            if(Implementation == null || Implementation.Status == PluginStatus.Null)
             {
-                if( (logOptions & ServiceLogEventOptions.SilentEventRunningStatusError) != 0 )
+                if((logOptions & ServiceLogEventOptions.SilentEventRunningStatusError) != 0)
                 {
                     entry = null;
-                    if( (logOptions & ServiceLogEventOptions.LogSilentEventRunningStatusError) != 0 )
-                        _serviceHost.LogEventNotRunningError( e.Event, true );
+                    if((logOptions & ServiceLogEventOptions.LogSilentEventRunningStatusError) != 0)
+                        _serviceHost.LogEventNotRunningError(e.Event, true);
                     return false;
                 }
-                throw new ServiceNotAvailableException( TypeInterface );
+                throw new ServiceNotAvailableException(_typeInterface);
             }
-            entry = logOptions != 0 ? _serviceHost.LogEventEnter( e.Event, logOptions ) : null;
+            entry = logOptions != 0 ? _serviceHost.LogEventEnter(e.Event, logOptions) : null;
             return true;
         }
 
         [DebuggerNonUserCode]
-        internal bool GetLoggerEventForAnyCall( int iEventMRef, out LogEventEntry entry, out ServiceLogEventOptions logOptions )
+        internal bool GetLoggerEventForAnyCall(int iEventMRef, out LogEventEntry entry,
+            out ServiceLogEventOptions logOptions)
         {
-            EEntry e = _eRefs[iEventMRef];
+            var e = EventEntries[iEventMRef];
             logOptions = e.LogOptions & ServiceLogEventOptions.CreateEntryMask;
-            entry = logOptions != 0 ? _serviceHost.LogEventEnter( e.Event, logOptions ) : null;
+            entry = logOptions != 0 ? _serviceHost.LogEventEnter(e.Event, logOptions) : null;
             return true;
         }
 
         [DebuggerNonUserCode]
-        internal void LogEndRaise( LogEventEntry e )
+        internal void LogEndRaise(LogEventEntry e)
         {
-            Debug.Assert( e != null );
-            _serviceHost.LogEventEnd( e );
+            Debug.Assert(e != null);
+            _serviceHost.LogEventEnd(e);
         }
 
         /// <summary>
-        /// This method is called when an event subscriber raises an exception while receiving the notification.
-        /// By returning true, this methods silently swallow the exception. By returning false, the event dispatching
-        /// is stoppped (remaining subscribers will not receive the event) and the plugin receives the exception (this
-        /// corresponds to the standard behavior).
+        ///     This method is called when an event subscriber raises an exception while receiving the notification.
+        ///     By returning true, this methods silently swallow the exception. By returning false, the event dispatching
+        ///     is stoppped (remaining subscribers will not receive the event) and the plugin receives the exception (this
+        ///     corresponds to the standard behavior).
         /// </summary>
         /// <param name="iEventMRef">The index of the event info.</param>
         /// <param name="target">The called method that raised the exception.</param>
@@ -391,21 +397,21 @@ namespace YodiiStaticProxy.Fody.Service
         /// <param name="ee">The log entry if it has been created. Will be created if needed.</param>
         /// <returns>True to silently swallow the exception.</returns>
         [DebuggerNonUserCode]
-        internal bool OnEventHandlingException( int iEventMRef, MethodInfo target, Exception ex, ref LogEventEntry ee )
-		{
-            EEntry e = _eRefs[iEventMRef];
-            if( (e.LogOptions & ServiceLogEventOptions.LogErrors) != 0 )
+        internal bool OnEventHandlingException(int iEventMRef, MethodInfo target, Exception ex, ref LogEventEntry ee)
+        {
+            var e = EventEntries[iEventMRef];
+            if((e.LogOptions & ServiceLogEventOptions.LogErrors) != 0)
             {
-                if( ee != null )
+                if(ee != null)
                 {
-                    _serviceHost.LogEventError( ee, target, ex );
+                    _serviceHost.LogEventError(ee, target, ex);
                 }
                 else
                 {
-                    ee = _serviceHost.LogEventError( e.Event, target, ex );
+                    ee = _serviceHost.LogEventError(e.Event, target, ex);
                 }
             }
-            return (e.LogOptions&ServiceLogEventOptions.SilentEventError) != 0;
+            return (e.LogOptions & ServiceLogEventOptions.SilentEventError) != 0;
         }
 
         #endregion

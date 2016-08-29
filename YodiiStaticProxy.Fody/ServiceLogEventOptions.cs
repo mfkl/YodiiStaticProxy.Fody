@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\ServiceLogEventOptions.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,59 +28,59 @@ using System;
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Bit flags that describes the way an event is intercepted.
+    ///     Bit flags that describes the way an event is intercepted.
     /// </summary>
     [Flags]
     public enum ServiceLogEventOptions
     {
         /// <summary>
-        /// "Naked mode". Nothing is logged (even exceptions). 
+        ///     "Naked mode". Nothing is logged (even exceptions).
         /// </summary>
         None = 0,
 
         /// <summary>
-        /// Errors (exceptions occuring during event raising) are logged.
+        ///     Errors (exceptions occuring during event raising) are logged.
         /// </summary>
         LogErrors = 1,
 
         /// <summary>
-        /// Logs the beginning of the event raising.
+        ///     Logs the beginning of the event raising.
         /// </summary>
         StartRaise = 2,
-        
+
         /// <summary>
-        /// Logs the parameters of the event.
+        ///     Logs the parameters of the event.
         /// </summary>
         LogParameters = 4,
-                
+
         /// <summary>
-        /// Logs the end of the event raising.
+        ///     Logs the end of the event raising.
         /// </summary>
         EndRaise = 8,
 
         /// <summary>
-        /// Covers event configuration flags (excludes <see cref="LogErrors"/>, <see cref="SilentEventRunningStatusError"/> and <see cref="SilentEventError"/>)
-        /// that triggers the creation of an entry.
+        ///     Covers event configuration flags (excludes <see cref="LogErrors" />, <see cref="SilentEventRunningStatusError" />
+        ///     and <see cref="SilentEventError" />)
+        ///     that triggers the creation of an entry.
         /// </summary>
         CreateEntryMask = StartRaise | LogParameters | EndRaise,
 
         /// <summary>
-        /// Ignores any error when a service raises an event while not running.
-        /// Since we intercept the raising of the event, this corrects the bad behavior.
+        ///     Ignores any error when a service raises an event while not running.
+        ///     Since we intercept the raising of the event, this corrects the bad behavior.
         /// </summary>
         SilentEventRunningStatusError = 16,
 
         /// <summary>
-        /// When <see cref="SilentEventRunningStatusError"/> is set, this triggers the log of an error.
+        ///     When <see cref="SilentEventRunningStatusError" /> is set, this triggers the log of an error.
         /// </summary>
         LogSilentEventRunningStatusError = 32,
 
         /// <summary>
-        /// Exceptions raised while receivers handle the event will be ignored.
-        /// Remaining subscribers of the event will receive the event.
-        /// (This flag is independant of <see cref="LogErrors"/>.)
+        ///     Exceptions raised while receivers handle the event will be ignored.
+        ///     Remaining subscribers of the event will receive the event.
+        ///     (This flag is independant of <see cref="LogErrors" />.)
         /// </summary>
-        SilentEventError = 64,
+        SilentEventError = 64
     }
-
 }

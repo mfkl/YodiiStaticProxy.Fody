@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\StStartContext.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -28,50 +30,57 @@ using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-    [DebuggerDisplay( "Implementation={Implementation}" )]
-    class StStartContext : StContext, IPreStartContext, IStartContext
+    [DebuggerDisplay("Implementation={Implementation}")]
+    internal class StStartContext : StContext, IPreStartContext, IStartContext
     {
+        public readonly bool WasDisabled;
+        readonly Action<Action<IYodiiEngineExternal>> _actionCollector;
         ServiceManager.Impact _swappedImpact;
 
-        public StStartContext( PluginProxy plugin, Dictionary<object, object> shared, bool wasDisabled )
-            : base( plugin, shared )
+        public StStartContext(PluginProxy plugin, RunningStatus status, Dictionary<object, object> shared,
+            bool wasDisabled, Action<Action<IYodiiEngineExternal>> actionCollector)
+            : base(plugin, status, shared)
         {
+            Debug.Assert(actionCollector != null);
             WasDisabled = wasDisabled;
+            _actionCollector = actionCollector;
         }
 
-        public readonly bool WasDisabled;
-
-        public Action<IStopContext> RollbackAction { get; set; }
-
-        public ServiceManager.Impact SwappedServiceImpact 
+        public ServiceManager.Impact SwappedServiceImpact
         {
-            get { return _swappedImpact; } 
+            get { return _swappedImpact; }
             set
             {
-                Debug.Assert( _swappedImpact == null && value != null );
+                Debug.Assert(_swappedImpact == null && value != null);
                 _swappedImpact = value;
-                Status = StContext.StStatus.StartingSwap;
+                Status = StStatus.StartingSwap;
             }
         }
 
-        public IYodiiService PreviousPluginCommonService 
+        public StContext PreviousImpl
         {
-            get { return _swappedImpact != null ? (IYodiiService)_swappedImpact.Service : null; } 
+            get { return _swappedImpact != null ? _swappedImpact.Implementation : null; }
         }
 
-        public StContext PreviousImpl 
+        public Action<IStopContext> RollbackAction { get; set; }
+
+        public IYodiiService PreviousPluginCommonService
         {
-            get { return _swappedImpact != null ? _swappedImpact.Implementation : null; } 
+            get { return _swappedImpact != null ? _swappedImpact.Service : null; }
         }
 
-        IYodiiPlugin IPreStartContext.PreviousPlugin { get { return PreviousImpl != null ? PreviousImpl.Plugin.RealPluginObject : null; } }
+        IYodiiPlugin IPreStartContext.PreviousPlugin
+        {
+            get { return PreviousImpl != null ? PreviousImpl.Plugin.RealPluginObject : null; }
+        }
 
         bool IPreStartContext.HotSwapping
         {
             get { return Status == StStatus.StartingHotSwap; }
             set
             {
-                if( PreviousImpl == null ) throw new InvalidOperationException( "PreviousPluginMustNotBeNull" );
+                if(PreviousImpl == null) throw new InvalidOperationException("PreviousPluginMustNotBeNull");
+//                if( PreviousImpl == null ) throw new InvalidOperationException( R.PreviousPluginMustNotBeNull );
                 PreviousImpl.HotSwapped = value;
                 HotSwapped = value;
             }
@@ -87,10 +96,17 @@ namespace YodiiStaticProxy.Fody.Plugin
             get { return Status == StStatus.StartingHotSwap; }
         }
 
+        public void PostAction(Action<IYodiiEngineExternal> delayedAction)
+        {
+            if(delayedAction == null) throw new ArgumentNullException("delayedAction");
+            _actionCollector(delayedAction);
+        }
+
+
         public override string ToString()
         {
-            return String.Format( "Start: {0}, Previous={1}", Plugin.PluginInfo.PluginFullName, PreviousImpl != null ? PreviousImpl.Plugin.PluginInfo.PluginFullName : "null" );
+            return string.Format("Start: {0}, Previous={1}", Plugin.PluginInfo.PluginFullName,
+                PreviousImpl != null ? PreviousImpl.Plugin.PluginInfo.PluginFullName : "null");
         }
     }
-
 }

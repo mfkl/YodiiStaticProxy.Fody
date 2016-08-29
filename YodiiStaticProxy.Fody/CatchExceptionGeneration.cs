@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\CatchExceptionGeneration.cs) is part of CiviKey. 
 *  
@@ -19,31 +20,31 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
-#endregion
 
-using Yodii.Model;
+#endregion
 
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Defines how Service proxies handle exceptions on method, property or event of <see cref="HonorIgnoreExceptionAttribute"/> interfaces. 
-    /// This drives code generation and defaults to <see cref="IYodiiService"/>.
+    ///     Defines how Service proxies handle exceptions on method, property or event of <see cref="IYodiiService" />
+    ///     interfaces.
+    ///     This drives code generation and defaults to <see cref="HonorIgnoreExceptionAttribute" />.
     /// </summary>
     public enum CatchExceptionGeneration
     {
         /// <summary>
-        /// Never generate code that intercepts exceptions.
+        ///     Never generate code that intercepts exceptions.
         /// </summary>
         Never,
 
         /// <summary>
-        /// Always generate code that intercepts exceptions.
+        ///     Always generate code that intercepts exceptions.
         /// </summary>
         Always,
 
         /// <summary>
-        /// Generate code that intercepts exceptions except if the method, property or event of 
-        /// the <see cref="IYodiiService"/> interface is marked with <see cref="IgnoreExceptionAttribute"/>.
+        ///     Generate code that intercepts exceptions except if the method, property or event of
+        ///     the <see cref="IYodiiService" /> interface is marked with <see cref="IgnoreExceptionAttribute" />.
         /// </summary>
         HonorIgnoreExceptionAttribute
     }

@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\ServiceCallBlockedException.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,21 +28,20 @@ using System;
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Exception raised when calling a service when calls to services are not allowed:
-    /// when loading a plugin (from its constructor) or when executing PreStart or Stop method.
+    ///     Exception raised when calling a service when calls to services are not allowed:
+    ///     when loading a plugin (from its constructor) or when executing PreStart or Stop method.
     /// </summary>
-	[Serializable]
+    [Serializable]
     public class ServiceCallBlockedException : ServiceCallException
-	{
+    {
         /// <summary>
-        /// Initializes a new <see cref="ServiceCallBlockedException"/>.
+        ///     Initializes a new <see cref="ServiceCallBlockedException" />.
         /// </summary>
         /// <param name="calledServiceType">Type of the called service.</param>
         /// <param name="message">Detailed message.</param>
-        public ServiceCallBlockedException( Type calledServiceType, string message )
-			: base( calledServiceType, message )
-		{
+        public ServiceCallBlockedException(Type calledServiceType, string message)
+            : base(calledServiceType, message)
+        {
         }
-
     }
 }

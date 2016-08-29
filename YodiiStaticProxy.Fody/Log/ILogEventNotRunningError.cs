@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogEventNotRunningError.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -26,17 +28,17 @@ using System.Reflection;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Log event emitted when service that is not running raised an event.
+    ///     Log event emitted when service that is not running raised an event.
     /// </summary>
     public interface ILogEventNotRunningError : ILogInterceptionEntry, ILogErrorCulprit
     {
         /// <summary>
-        /// The event raised when the service not in a running state: it is the <see cref="ILogErrorCulprit.Culprit"/>.
+        ///     The event raised when the service not in a running state: it is the <see cref="ILogErrorCulprit.Culprit" />.
         /// </summary>
         EventInfo Event { get; }
 
         /// <summary>
-        /// True if the service is actually disabled, false if it is not running.
+        ///     True if the service is actually disabled, false if it is not running.
         /// </summary>
         bool ServiceIsDisabled { get; }
     }

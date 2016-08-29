@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogEventEntry.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -27,20 +29,18 @@ using CK.Core;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Log event related to event raising.
+    ///     Log event related to event raising.
     /// </summary>
     public interface ILogEventEntry : ILogInterceptionEntry, ILogWithParametersEntry
     {
         /// <summary>
-        /// Gets the event associated to this entry.
+        ///     Gets the event associated to this entry.
         /// </summary>
         EventInfo Event { get; }
-        
+
         /// <summary>
-        /// Gets the list of errors thrown by event receivers.
+        ///     Gets the list of errors thrown by event receivers.
         /// </summary>
         ICKReadOnlyCollection<ILogEventError> Errors { get; }
-
-
     }
 }

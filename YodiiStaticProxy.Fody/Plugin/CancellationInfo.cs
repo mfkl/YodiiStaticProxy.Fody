@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\CancellationInfo.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,21 +28,26 @@ using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-    class CancellationInfo : IPluginHostApplyCancellationInfo
+    internal class CancellationInfo : IPluginHostApplyCancellationInfo
     {
-        public CancellationInfo( IPluginInfo p, bool isLoadError = false )
+        public CancellationInfo(IPluginInfo p, bool isLoadError = false)
         {
             Plugin = p;
             IsLoadError = isLoadError;
         }
 
-        public IPluginInfo Plugin { get; private set; }
+        public IPluginInfo Plugin { get; }
 
-        public bool IsLoadError { get; private set; }
+        public bool IsLoadError { get; }
+
+        public bool IsPreStartOrStopUnhandledException { get; set; }
 
         public bool IsStartCanceled { get; set; }
 
-        public bool IsStopCanceled { get { return !IsLoadError && !IsStartCanceled; } }
+        public bool IsStopCanceled
+        {
+            get { return !IsLoadError && !IsStartCanceled; }
+        }
 
         public string ErrorMessage { get; set; }
 

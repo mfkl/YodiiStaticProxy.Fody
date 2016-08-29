@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\PluginProxyBase.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -31,78 +33,98 @@ using YodiiStaticProxy.Fody.Service;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-    class PluginProxyBase
+    internal class PluginProxyBase
     {
         IYodiiPlugin _instance;
-        Exception  _loadError;
+        Exception _loadError;
 
         public PluginStatus Status { get; set; }
 
         /// <summary>
-        /// Gets the implemented service.
+        ///     Gets the implemented service.
         /// </summary>
         internal ServiceProxyBase Service { get; private set; }
 
-        public Exception LoadError 
-        { 
-            get 
+        public Exception LoadError
+        {
+            get
             {
-                Debug.Assert( (_instance == null) == (Status == PluginStatus.Null), "_instance == null <==> Status == Null" );
-                return _loadError; 
-            } 
+                Debug.Assert(_instance == null == (Status == PluginStatus.Null),
+                    "_instance == null <==> Status == Null");
+                return _loadError;
+            }
         }
 
         public IYodiiPlugin RealPluginObject
         {
             get
             {
-                Debug.Assert( (_instance == null) == (Status == PluginStatus.Null), "_instance == null <==> Status == Null" );
+                Debug.Assert(_instance == null == (Status == PluginStatus.Null),
+                    "_instance == null <==> Status == Null");
                 return _instance;
             }
         }
 
-        internal MethodInfo GetImplMethodInfoPreStop() { return GetImplMethodInfo( typeof( IYodiiPlugin ), "PreStop" ); }
-
-        internal MethodInfo GetImplMethodInfoPreStart() { return GetImplMethodInfo( typeof( IYodiiPlugin ), "PreStart" ); }
-
-        internal MethodInfo GetImplMethodInfoStop() { return GetImplMethodInfo( typeof( IYodiiPlugin ), "Stop" ); }
-
-        internal MethodInfo GetImplMethodInfoStart() { return GetImplMethodInfo( typeof( IYodiiPlugin ), "Start" ); }
-        
-        internal MethodInfo GetImplMethodInfoDispose() { return GetImplMethodInfo( typeof( IDisposable ), "Dispose" ); }
-
-        MethodInfo GetImplMethodInfo( Type interfaceType, string methodName ) 
+        internal MethodInfo GetImplMethodInfoPreStop()
         {
-            Debug.Assert( RealPluginObject != null );
-            MethodInfo m = RealPluginObject.GetType().GetMethod( interfaceType.FullName + '.' + methodName );
-            if( m == null ) m = RealPluginObject.GetType().GetMethod( methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public );
+            return GetImplMethodInfo(typeof (IYodiiPlugin), "PreStop");
+        }
+
+        internal MethodInfo GetImplMethodInfoPreStart()
+        {
+            return GetImplMethodInfo(typeof (IYodiiPlugin), "PreStart");
+        }
+
+        internal MethodInfo GetImplMethodInfoStop()
+        {
+            return GetImplMethodInfo(typeof (IYodiiPlugin), "Stop");
+        }
+
+        internal MethodInfo GetImplMethodInfoStart()
+        {
+            return GetImplMethodInfo(typeof (IYodiiPlugin), "Start");
+        }
+
+        internal MethodInfo GetImplMethodInfoDispose()
+        {
+            return GetImplMethodInfo(typeof (IDisposable), "Dispose");
+        }
+
+        MethodInfo GetImplMethodInfo(Type interfaceType, string methodName)
+        {
+            Debug.Assert(RealPluginObject != null);
+            var m = RealPluginObject.GetType().GetMethod(interfaceType.FullName + '.' + methodName);
+            if(m == null)
+                m = RealPluginObject.GetType()
+                    .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
             return m;
         }
 
         /// <summary>
-        /// Supports <see cref="IDisposable"/> implementation and sets Status to Null.
-        /// If the real plugin does not implement IDisposable, nothing is done and 
-        /// the current reference instance is kept (it will be reused and the Status stays to Stopped).
-        /// If IDisposable is implemented, a call to Dispose may throw an exception (it is routed to the ServiceHost.LogMethodError), but the _instance 
-        /// reference is set to null: a new object will always have to be created if the plugin needs to be started again.
+        ///     Supports <see cref="IDisposable" /> implementation and sets Status to Null.
+        ///     If the real plugin does not implement IDisposable, nothing is done and
+        ///     the current reference instance is kept (it will be reused and the Status stays to Stopped).
+        ///     If IDisposable is implemented, a call to Dispose may throw an exception (it is routed to the
+        ///     ServiceHost.LogMethodError), but the _instance
+        ///     reference is set to null: a new object will always have to be created if the plugin needs to be started again.
         /// </summary>
-        internal void Disable( IActivityMonitor m, bool setToNull = false )
+        internal void Disable(IActivityMonitor m, bool setToNull = false)
         {
-            Debug.Assert( Status == PluginStatus.Stopped, "Status has been set to Stopped." );
-            IDisposable di = _instance as IDisposable;
+            Debug.Assert(Status == PluginStatus.Stopped, "Status has been set to Stopped.");
+            var di = _instance as IDisposable;
             try
             {
-                if( di != null ) di.Dispose();
+                if(di != null) di.Dispose();
             }
-            catch( Exception ex )
+            catch (Exception ex)
             {
-                m.Error().Send( ex );
+                m.Error().Send(ex);
             }
             finally
             {
                 // Clear _instance after Dispose: if an exception is raised,
                 // GetImplMethodInfoDispose() may be called by the logger.
-                if( setToNull || di != null )
+                if(setToNull || di != null)
                 {
                     Status = PluginStatus.Null;
                     _instance = null;
@@ -110,29 +132,33 @@ namespace YodiiStaticProxy.Fody.Plugin
             }
         }
 
-        internal bool TryLoad( ServiceHost serviceHost, Func<IYodiiPlugin> pluginCreator, object pluginKey )
+        internal bool TryLoad(ServiceHost serviceHost, Func<IYodiiPlugin> pluginCreator, object pluginKey)
         {
-            if( _instance == null )
+            if(_instance == null)
             {
                 try
                 {
                     _instance = pluginCreator();
-                    if( _instance == null )
+                    if(_instance == null)
                     {
-                        _loadError = new CKException( "PluginCreatorReturnedNull", pluginKey );
+//                        _loadError = new CKException( R.PluginCreatorReturnedNull, pluginKey );
+                        _loadError = new CKException("PluginCreatorReturnedNull", pluginKey);
                         return false;
                     }
-                    Type t = _instance.GetType();
-                    if( typeof( IYodiiService ).IsAssignableFrom( t ) )
+                    var t = _instance.GetType();
+                    if(typeof (IYodiiService).IsAssignableFrom(t))
                     {
-                        Type iType = t.GetInterfaces().FirstOrDefault( i => i != typeof( IYodiiService ) && typeof( IYodiiService ).IsAssignableFrom( i ) );
-                        if( iType != null )
+                        var iType =
+                            t.GetInterfaces()
+                                .FirstOrDefault(
+                                    i => i != typeof (IYodiiService) && typeof (IYodiiService).IsAssignableFrom(i));
+                        if(iType != null)
                         {
-                            Service = serviceHost.EnsureProxyForDynamicService( iType );
+                            Service = serviceHost.EnsureProxyForDynamicService(iType);
                         }
                     }
                 }
-                catch( Exception ex )
+                catch (Exception ex)
                 {
                     _loadError = ex;
                     return false;
@@ -140,6 +166,5 @@ namespace YodiiStaticProxy.Fody.Plugin
             }
             return true;
         }
-
     }
 }

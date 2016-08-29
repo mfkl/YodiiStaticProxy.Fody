@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogEventEntry.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -31,45 +33,43 @@ using YodiiStaticProxy.Fody.Log;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-    class LogEventEntry : LogHostEventArgs, ILogEventEntry, ICKReadOnlyCollection<ILogEventError>
+    internal class LogEventEntry : LogHostEventArgs, ILogEventEntry, ICKReadOnlyCollection<ILogEventError>
     {
         int _depth;
-        EventInfo _event;
-        internal object[] _parameters;
         int _errorCount;
         LogEventEntryError _firstError;
         LogEventEntryError _lastError;
+        internal object[] _parameters;
 
-        internal void InitOpen( int lsn, int depth, EventInfo e )
+        internal bool IsErrorHead
         {
-            LSN = -lsn;
-            _depth = depth;
-            _event = e;
+            get { return _errorCount < 0; }
         }
 
-        internal void InitClose( int lsn, int depth, EventInfo e )
+        int IReadOnlyCollection<ILogEventError>.Count
         {
-            LSN = lsn;
-            _depth = depth;
-            _event = e;
+            get { return Math.Abs(_errorCount); }
         }
 
-        /// <summary>
-        /// Initializes the entry as an hidden error head (the first time an error occcurs and no event entry is created
-        /// for the event). This entry is not visible (it is not emitted as a log event), it is here to handle the 
-        /// potential list of errors that the event will raise.
-        /// </summary>
-        /// <param name="lsn"></param>
-        /// <param name="depth"></param>
-        /// <param name="e"></param>
-        /// <param name="firstOne"></param>
-        internal void InitError( int lsn, int depth, EventInfo e, LogEventEntryError firstOne )
+        bool ICKReadOnlyCollection<ILogEventError>.Contains(object o)
         {
-            LSN = lsn;
-            _depth = depth;
-            _event = e;
-            _errorCount = -1;
-            _firstError = _lastError = firstOne;
+            var e = o as LogEventEntryError;
+            return e != null && e.OtherErrors == this;
+        }
+
+        IEnumerator<ILogEventError> IEnumerable<ILogEventError>.GetEnumerator()
+        {
+            var l = _firstError;
+            while (l != null)
+            {
+                yield return l;
+                l = l._nextError;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<ILogEventError>) this).GetEnumerator();
         }
 
         public override LogEntryType EntryType
@@ -82,28 +82,16 @@ namespace YodiiStaticProxy.Fody.Service
             get { return _depth; }
         }
 
-        public EventInfo Event
-        {
-            get { return _event; }
-        }
+        public EventInfo Event { get; set; }
 
         public object[] Parameters
         {
             get { return _parameters; }
         }
 
-        internal void AddError( LogEventEntryError l )
-        {
-            if( _errorCount > 0 ) ++_errorCount;
-            else --_errorCount;
-            if( _lastError != null ) _lastError._nextError = l;
-            else _firstError = l;
-            _lastError = l;
-        }
-
         public override MemberInfo Member
         {
-            get { return _event; }
+            get { return Event; }
         }
 
         public ICKReadOnlyCollection<ILogEventError> Errors
@@ -111,40 +99,50 @@ namespace YodiiStaticProxy.Fody.Service
             get { return this; }
         }
 
-        internal bool IsErrorHead
+        internal void InitOpen(int lsn, int depth, EventInfo e)
         {
-            get { return _errorCount < 0; }
+            LSN = -lsn;
+            _depth = depth;
+            Event = e;
         }
 
-        int IReadOnlyCollection<ILogEventError>.Count 
-        { 
-            get { return Math.Abs( _errorCount ); } 
+        internal void InitClose(int lsn, int depth, EventInfo e)
+        {
+            LSN = lsn;
+            _depth = depth;
+            Event = e;
         }
 
-        bool ICKReadOnlyCollection<ILogEventError>.Contains( object o )
+        /// <summary>
+        ///     Initializes the entry as an hidden error head (the first time an error occcurs and no event entry is created
+        ///     for the event). This entry is not visible (it is not emitted as a log event), it is here to handle the
+        ///     potential list of errors that the event will raise.
+        /// </summary>
+        /// <param name="lsn"></param>
+        /// <param name="depth"></param>
+        /// <param name="e"></param>
+        /// <param name="firstOne"></param>
+        internal void InitError(int lsn, int depth, EventInfo e, LogEventEntryError firstOne)
         {
-            LogEventEntryError e = o as LogEventEntryError;
-            return e != null && e.OtherErrors == this;
+            LSN = lsn;
+            _depth = depth;
+            Event = e;
+            _errorCount = -1;
+            _firstError = _lastError = firstOne;
         }
 
-        IEnumerator<ILogEventError> IEnumerable<ILogEventError>.GetEnumerator()
+        internal void AddError(LogEventEntryError l)
         {
-            LogEventEntryError l = _firstError;
-            while( l != null )
-            {
-                yield return l;
-                l = l._nextError;
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable<ILogEventError>)this).GetEnumerator();
+            if(_errorCount > 0) ++_errorCount;
+            else --_errorCount;
+            if(_lastError != null) _lastError._nextError = l;
+            else _firstError = l;
+            _lastError = l;
         }
 
         internal void Close()
         {
-            Debug.Assert( IsCreating );
+            Debug.Assert(IsCreating);
             LSN = -LSN;
         }
     }

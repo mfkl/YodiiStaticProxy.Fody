@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogMethodError.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -26,19 +28,18 @@ using System.Reflection;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Log event emitted whenever an error occured during a method call.
+    ///     Log event emitted whenever an error occured during a method call.
     /// </summary>
     public interface ILogMethodError : ILogInterceptionEntry, ILogErrorCaught
     {
         /// <summary>
-        /// The method that raised the error (it is also the <see cref="ILogErrorCulprit.Culprit"/>).
+        ///     The method that raised the error (it is also the <see cref="ILogErrorCulprit.Culprit" />).
         /// </summary>
         MethodInfo Method { get; }
 
         /// <summary>
-        /// Logged method entry if it exists (null otherwise).
+        ///     Logged method entry if it exists (null otherwise).
         /// </summary>
         ILogMethodEntry MethodEntry { get; }
-
     }
 }

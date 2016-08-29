@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogInterceptionEntry.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -26,14 +28,13 @@ using System.Reflection;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Common interface for log entries that corresponds to an interception: events are bound to a <see cref="Member"/>.
+    ///     Common interface for log entries that corresponds to an interception: events are bound to a <see cref="Member" />.
     /// </summary>
     public interface ILogInterceptionEntry : ILogEntry
     {
         /// <summary>
-        /// Member concerned by the log.
+        ///     Member concerned by the log.
         /// </summary>
         MemberInfo Member { get; }
-
     }
 }

@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogMethodError.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -28,20 +30,16 @@ using YodiiStaticProxy.Fody.Log;
 namespace YodiiStaticProxy.Fody.Service
 {
     /// <summary>
-    /// Used for error that occured in a non-logged method.
+    ///     Used for error that occured in a non-logged method.
     /// </summary>
-    class LogMethodError : LogHostEventArgs, ILogMethodError
+    internal class LogMethodError : LogHostEventArgs, ILogMethodError
     {
-        int _depth;
-        MethodInfo _method;
-        Exception _exception;
-
-        internal LogMethodError( int lsn, int depth, MethodInfo m, Exception ex )
+        internal LogMethodError(int lsn, int depth, MethodInfo m, Exception ex)
         {
             LSN = lsn;
-            _depth = depth;
-            _method = m;
-            _exception = ex;
+            Depth = depth;
+            Method = m;
+            Error = ex;
         }
 
         public override LogEntryType EntryType
@@ -49,35 +47,25 @@ namespace YodiiStaticProxy.Fody.Service
             get { return LogEntryType.MethodError; }
         }
 
-        public override int Depth
-        {
-            get { return _depth; }
-        }
+        public override int Depth { get; }
 
-        public MethodInfo Method
-        {
-            get { return _method; }
-        }
+        public MethodInfo Method { get; }
 
         public MemberInfo Culprit
         {
-            get { return _method; }
+            get { return Method; }
         }
 
-        public Exception Error
-        {
-            get { return _exception; }
-        }
+        public Exception Error { get; }
 
         public override MemberInfo Member
         {
-            get { return _method; }
+            get { return Method; }
         }
-       
-        public ILogMethodEntry MethodEntry 
+
+        public ILogMethodEntry MethodEntry
         {
             get { return null; }
         }
-
     }
 }

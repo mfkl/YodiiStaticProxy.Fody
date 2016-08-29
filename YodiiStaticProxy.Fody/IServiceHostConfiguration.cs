@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\IServiceHostConfiguration.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -26,23 +28,22 @@ using System.Reflection;
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Gives access to the <see cref="IServiceHost"/> interception configuration.
+    ///     Gives access to the <see cref="IServiceHost" /> interception configuration.
     /// </summary>
     public interface IServiceHostConfiguration
     {
         /// <summary>
-        /// Gets the <see cref="ServiceLogMethodOptions"/> for the given method.
+        ///     Gets the <see cref="ServiceLogMethodOptions" /> for the given method.
         /// </summary>
         /// <param name="m">Method for which options should be obtained.</param>
         /// <returns>Configuration for the method.</returns>
-        ServiceLogMethodOptions GetOptions( MethodInfo m );
+        ServiceLogMethodOptions GetOptions(MethodInfo m);
 
         /// <summary>
-        /// Gets the <see cref="ServiceLogEventOptions"/> for the given event.
+        ///     Gets the <see cref="ServiceLogEventOptions" /> for the given event.
         /// </summary>
         /// <param name="e">Event for which options should be obtained.</param>
         /// <returns>Configuration for the event.</returns>
-        ServiceLogEventOptions GetOptions( EventInfo e );
+        ServiceLogEventOptions GetOptions(EventInfo e);
     }
-
 }

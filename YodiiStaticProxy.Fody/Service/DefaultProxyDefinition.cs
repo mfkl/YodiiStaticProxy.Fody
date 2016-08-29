@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\DefaultProxyDefinition.cs) is part of CiviKey. 
 *  
@@ -19,89 +20,100 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
 using System.Reflection;
-using Mono.Cecil;
 using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-	internal class DefaultProxyDefinition : IProxyDefinition
-	{
-		Type _typeInterface;
-        CatchExceptionGeneration _errorCatch;
-        bool _isDynamicService;
+    internal class DefaultProxyDefinition : IProxyDefinition
+    {
+        readonly CatchExceptionGeneration _errorCatch;
 
-        public DefaultProxyDefinition(Type typeInterface, CatchExceptionGeneration errorCatch = CatchExceptionGeneration.HonorIgnoreExceptionAttribute)
+        public DefaultProxyDefinition(Type typeInterface,
+            CatchExceptionGeneration errorCatch = CatchExceptionGeneration.HonorIgnoreExceptionAttribute)
         {
             if(!typeInterface.IsInterface)
             {
-                throw new ArgumentException("TypeMustBeAnInterface", nameof(typeInterface));
+//				throw new ArgumentException( R.TypeMustBeAnInterface, "typeInterface" );
+                throw new ArgumentException("TypeMustBeAnInterface", "typeInterface");
             }
-            _typeInterface = typeInterface;
+            TypeInterface = typeInterface;
             _errorCatch = errorCatch;
-            _isDynamicService = typeof(IYodiiService).IsAssignableFrom(typeInterface);
+            IsDynamicService = typeof (IYodiiService).IsAssignableFrom(typeInterface);
         }
 
-        public Type TypeInterface => _typeInterface;
+        public Type TypeInterface { get; }
 
-	    public bool IsDynamicService => _isDynamicService;
+        public bool IsDynamicService { get; }
 
-	    public Type ProxyBase => typeof( ServiceProxyBase );
-  
-        public ProxyOptions GetEventOptions( EventInfo e )
+        public Type ProxyBase
         {
-            ProxyOptions opt = new ProxyOptions();
-            
-            opt.CatchExceptions = _errorCatch == CatchExceptionGeneration.Always 
-                || (_errorCatch == CatchExceptionGeneration.HonorIgnoreExceptionAttribute 
-                    && !e.IsDefined( typeof( IgnoreExceptionAttribute ), false ));
-
-            if( _isDynamicService )
-            {
-                bool stopAllowed = e.IsDefined( typeof( IgnoreServiceStoppedAttribute ), false );
-                opt.RuntimeCheckStatus = stopAllowed ? ProxyOptions.CheckStatus.NotDisabled : ProxyOptions.CheckStatus.Running;
-            }
-            else opt.RuntimeCheckStatus = ProxyOptions.CheckStatus.None;
-
-            return opt;
+            get { return typeof (ServiceProxyBase); }
         }
 
-        public ProxyOptions GetPropertyMethodOptions( PropertyInfo p, MethodInfo m )
+        public ProxyOptions GetEventOptions(EventInfo e)
         {
-            ProxyOptions opt = new ProxyOptions();
-            
-            opt.CatchExceptions = _errorCatch == CatchExceptionGeneration.Always 
-                || (_errorCatch == CatchExceptionGeneration.HonorIgnoreExceptionAttribute 
-                    && !(p.IsDefined( typeof( IgnoreExceptionAttribute ), false ) || m.IsDefined( typeof( IgnoreExceptionAttribute ), false )) );
+            var opt = new ProxyOptions();
 
-            if( _isDynamicService )
-            {
-                bool stopAllowed = p.IsDefined( typeof( IgnoreServiceStoppedAttribute ), false ) || m.IsDefined( typeof( IgnoreServiceStoppedAttribute ), false );
-                opt.RuntimeCheckStatus = stopAllowed ? ProxyOptions.CheckStatus.NotDisabled : ProxyOptions.CheckStatus.Running;
-            }
-            else opt.RuntimeCheckStatus = ProxyOptions.CheckStatus.None;
-            return opt;
-        }
-
-        public ProxyOptions GetMethodOptions( MethodInfo m )
-        {
-            ProxyOptions opt = new ProxyOptions();
-            
             opt.CatchExceptions = _errorCatch == CatchExceptionGeneration.Always
-                || (_errorCatch == CatchExceptionGeneration.HonorIgnoreExceptionAttribute
-                    && !m.IsDefined( typeof( IgnoreExceptionAttribute ), false ));
+                                  || (_errorCatch == CatchExceptionGeneration.HonorIgnoreExceptionAttribute
+                                      && !e.IsDefined(typeof (IgnoreExceptionAttribute), false));
 
-            if( _isDynamicService )
+            if(IsDynamicService)
             {
-                bool stopAllowed = m.IsDefined( typeof( IgnoreServiceStoppedAttribute ), false );
-                opt.RuntimeCheckStatus = stopAllowed ? ProxyOptions.CheckStatus.NotDisabled : ProxyOptions.CheckStatus.Running;
+                var stopAllowed = e.IsDefined(typeof (IgnoreServiceStoppedAttribute), false);
+                opt.RuntimeCheckStatus = stopAllowed
+                    ? ProxyOptions.CheckStatus.NotDisabled
+                    : ProxyOptions.CheckStatus.Running;
+            }
+            else opt.RuntimeCheckStatus = ProxyOptions.CheckStatus.None;
+
+            return opt;
+        }
+
+        public ProxyOptions GetPropertyMethodOptions(PropertyInfo p, MethodInfo m)
+        {
+            var opt = new ProxyOptions();
+
+            opt.CatchExceptions = _errorCatch == CatchExceptionGeneration.Always
+                                  || (_errorCatch == CatchExceptionGeneration.HonorIgnoreExceptionAttribute
+                                      &&
+                                      !(p.IsDefined(typeof (IgnoreExceptionAttribute), false) ||
+                                        m.IsDefined(typeof (IgnoreExceptionAttribute), false)));
+
+            if(IsDynamicService)
+            {
+                var stopAllowed = p.IsDefined(typeof (IgnoreServiceStoppedAttribute), false) ||
+                                  m.IsDefined(typeof (IgnoreServiceStoppedAttribute), false);
+                opt.RuntimeCheckStatus = stopAllowed
+                    ? ProxyOptions.CheckStatus.NotDisabled
+                    : ProxyOptions.CheckStatus.Running;
             }
             else opt.RuntimeCheckStatus = ProxyOptions.CheckStatus.None;
             return opt;
         }
 
+        public ProxyOptions GetMethodOptions(MethodInfo m)
+        {
+            var opt = new ProxyOptions();
+
+            opt.CatchExceptions = _errorCatch == CatchExceptionGeneration.Always
+                                  || (_errorCatch == CatchExceptionGeneration.HonorIgnoreExceptionAttribute
+                                      && !m.IsDefined(typeof (IgnoreExceptionAttribute), false));
+
+            if(IsDynamicService)
+            {
+                var stopAllowed = m.IsDefined(typeof (IgnoreServiceStoppedAttribute), false);
+                opt.RuntimeCheckStatus = stopAllowed
+                    ? ProxyOptions.CheckStatus.NotDisabled
+                    : ProxyOptions.CheckStatus.Running;
+            }
+            else opt.RuntimeCheckStatus = ProxyOptions.CheckStatus.None;
+            return opt;
+        }
     }
 }

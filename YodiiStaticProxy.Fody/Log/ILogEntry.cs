@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogEntry.cs) is part of CiviKey. 
 *  
@@ -19,29 +20,29 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Common interface for log entries.
+    ///     Common interface for log entries.
     /// </summary>
     public interface ILogEntry
     {
         /// <summary>
-        /// Gets the actual type of this entry.
+        ///     Gets the actual type of this entry.
         /// </summary>
         LogEntryType EntryType { get; }
-        
+
         /// <summary>
-        /// Log Serial Number.
+        ///     Log Serial Number.
         /// </summary>
         int LSN { get; }
 
         /// <summary>
-        /// Depth on the call stack.
+        ///     Depth on the call stack.
         /// </summary>
         int Depth { get; }
-
     }
 }

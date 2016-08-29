@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\StStopContext.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -27,40 +29,48 @@ using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-    class StStopContext : StContext, IPreStopContext, IStopContext
+    internal class StStopContext : StContext, IPreStopContext, IStopContext
     {
-        public StStopContext( PluginProxy plugin, Dictionary<object, object> shared, bool mustDisable, bool disableOnly, bool engineStopping )
-            : base( plugin, shared )
-        {
-            MustDisable = mustDisable;
-            IsDisabledOnly = disableOnly;
-            IsCancellable = engineStopping;
-        }
-
         internal readonly bool IsDisabledOnly;
 
-        internal readonly bool MustDisable;
+        public StStopContext(PluginProxy plugin, RunningStatus status, Dictionary<object, object> shared,
+            bool disableOnly, bool engineStopping)
+            : base(plugin, status, shared)
+        {
+            IsDisabledOnly = disableOnly;
+            IsCancellable = !engineStopping;
+        }
 
-        public bool IsCancellable { get; private set; }
+        internal bool MustDisable
+        {
+            get { return RunningStatus == RunningStatus.Disabled; }
+        }
+
+        public bool IsCancellable { get; }
 
         public Action<IStartContext> RollbackAction { get; set; }
 
-        bool IStopContext.CancellingPreStart { get { return false; } }
+        public override void Cancel(string message = null, Exception ex = null)
+        {
+//            if( !IsCancellable ) throw new InvalidOperationException( R.CannotCancelSinceEngineIsStopping );
+            if(!IsCancellable) throw new InvalidOperationException("CannotCancelSinceEngineIsStopping");
+            base.Cancel(message, ex);
+        }
+
+        bool IStopContext.CancellingPreStart
+        {
+            get { return false; }
+        }
 
         bool IStopContext.HotSwapping
         {
             get { return Status == StStatus.StoppingHotSwap; }
         }
 
-        public override void Cancel( string message = null, Exception ex = null )
-        {
-            if( IsCancellable ) throw new InvalidOperationException( "CannotCancelSinceEngineIsStopping" );
-            base.Cancel( message, ex );
-        }
-
         public override string ToString()
         {
-            return String.Format( "Stop: {0}, MustDisable={1}, IsDisabledOnly={2}", Plugin.PluginInfo.PluginFullName, MustDisable, IsDisabledOnly );
+            return string.Format("Stop: {0}, MustDisable={1}, IsDisabledOnly={2}", Plugin.PluginInfo.PluginFullName,
+                MustDisable, IsDisabledOnly);
         }
     }
 }

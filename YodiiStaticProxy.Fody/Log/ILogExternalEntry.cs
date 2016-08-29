@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogExternalEntry.cs) is part of CiviKey. 
 *  
@@ -19,24 +20,24 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Log event externally generated (through <see cref="ILogCenter.ExternalLog"/>).
+    ///     Log event externally generated (through <see cref="ILogCenter.ExternalLog" />).
     /// </summary>
     public interface ILogExternalEntry : ILogEntry
     {
         /// <summary>
-        /// Gets the message associated to the event.
+        ///     Gets the message associated to the event.
         /// </summary>
         string Message { get; }
 
         /// <summary>
-        /// Gets an optional extra data associated to the event.
+        ///     Gets an optional extra data associated to the event.
         /// </summary>
         object ExtraData { get; }
-
     }
 }

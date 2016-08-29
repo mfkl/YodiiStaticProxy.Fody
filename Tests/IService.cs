@@ -1,7 +1,7 @@
 ﻿
 using Yodii.Model;
 
-namespace AssemblyToProcess
+namespace Tests
 {
     public interface IService : IYodiiService
     {

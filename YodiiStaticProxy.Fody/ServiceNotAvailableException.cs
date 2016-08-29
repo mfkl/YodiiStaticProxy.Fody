@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\ServiceNotAvailableException.cs) is part of CiviKey. 
 *  
@@ -19,36 +20,36 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
 
 namespace YodiiStaticProxy.Fody
 {
-
     /// <summary>
-    /// Exception raised whenever an event is raised by or a method is called on a non running service. 
+    ///     Exception raised whenever an event is raised by or a method is called on a non running service.
     /// </summary>
     [Serializable]
     public class ServiceNotAvailableException : ServiceCallException
-	{
+    {
         /// <summary>
-        /// Initializes a new <see cref="ServiceNotAvailableException"/>.
+        ///     Initializes a new <see cref="ServiceNotAvailableException" />.
         /// </summary>
         /// <param name="serviceType">Type of the concerned service.</param>
-		public ServiceNotAvailableException( Type serviceType )
-            : base( serviceType )
-		{
-		}
+        public ServiceNotAvailableException(Type serviceType)
+            : base(serviceType)
+        {
+        }
 
         /// <summary>
-        /// Initializes a new <see cref="ServiceNotAvailableException"/>.
+        ///     Initializes a new <see cref="ServiceNotAvailableException" />.
         /// </summary>
         /// <param name="serviceType">Type of the concerned service.</param>
         /// <param name="message">Detailed message.</param>
-        public ServiceNotAvailableException( Type serviceType, string message )
-			: base( serviceType, message )
-		{
+        public ServiceNotAvailableException(Type serviceType, string message)
+            : base(serviceType, message)
+        {
         }
     }
 }

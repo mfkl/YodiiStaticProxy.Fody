@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\IPluginProxy.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -27,31 +29,29 @@ using Yodii.Model;
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Exposes plugin wrapper readonly informations.
-    /// This is mainly for debugging/tests purposes that this interface in exposed.
+    ///     Exposes plugin wrapper readonly informations.
+    ///     This is mainly for debugging/tests purposes that this interface in exposed.
     /// </summary>
     public interface IPluginProxy
     {
         /// <summary>
-        /// Gets the plugin information object.
+        ///     Gets the plugin information object.
         /// </summary>
         IPluginInfo PluginInfo { get; }
 
         /// <summary>
-        /// Current running status of the plugin.
+        ///     Current running status of the plugin.
         /// </summary>
         PluginStatus Status { get; }
 
         /// <summary>
-        /// Gets the real instance of the underlying plugin.
+        ///     Gets the real instance of the underlying plugin.
         /// </summary>
         IYodiiPlugin RealPluginObject { get; }
 
         /// <summary>
-        /// Exception raised when the plugin was last activated. Null if no error occured.
+        ///     Exception raised when the plugin was last activated. Null if no error occured.
         /// </summary>
         Exception LoadError { get; }
-
     }
-
 }

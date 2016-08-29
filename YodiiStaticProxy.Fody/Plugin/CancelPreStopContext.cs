@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\CancelPreStopContext.cs) is part of CiviKey. 
 *  
@@ -19,26 +20,46 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
+using System;
 using System.Collections.Generic;
 using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-    class CancelPresStopContext : IStartContext
+    internal class CancelPresStopContext : IStartContext
     {
         readonly Dictionary<object, object> _shared;
 
-        public CancelPresStopContext( Dictionary<object, object> shared )
+        public CancelPresStopContext(Dictionary<object, object> shared)
         {
             _shared = shared;
         }
 
-        public bool CancellingPreStop { get { return true; } }
+        public RunningStatus RunningStatus
+        {
+            get { return RunningStatus.Disabled; }
+        }
 
-        public IDictionary<object, object> SharedMemory { get { return _shared; } }
+        public bool CancellingPreStop
+        {
+            get { return true; }
+        }
 
-        public bool HotSwapping { get { return false; } }
+        public IDictionary<object, object> SharedMemory
+        {
+            get { return _shared; }
+        }
+
+        public bool HotSwapping
+        {
+            get { return false; }
+        }
+
+        public void PostAction(Action<IYodiiEngineExternal> delayedAction)
+        {
+        }
     }
 }

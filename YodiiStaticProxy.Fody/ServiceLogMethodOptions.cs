@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\ServiceLogMethodOptions.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,50 +28,49 @@ using System;
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Bit flags that describes the way a method is intercepted.
+    ///     Bit flags that describes the way a method is intercepted.
     /// </summary>
     [Flags]
     public enum ServiceLogMethodOptions
     {
         /// <summary>
-        /// "Naked mode". Nothing is logged (even exceptions). 
+        ///     "Naked mode". Nothing is logged (even exceptions).
         /// </summary>
         None = 0,
 
         /// <summary>
-        /// Log the exception that the method may throw.
+        ///     Log the exception that the method may throw.
         /// </summary>
         LogError = 1,
 
         /// <summary>
-        /// Log the beginning of the call to the method.
+        ///     Log the beginning of the call to the method.
         /// </summary>
         Enter = 2,
 
         /// <summary>
-        /// Log the parameters of the call.
+        ///     Log the parameters of the call.
         /// </summary>
         LogParameters = 4,
 
         /// <summary>
-        /// Log the caller method.
+        ///     Log the caller method.
         /// </summary>
         LogCaller = 8,
 
         /// <summary>
-        /// Log the end of the call to the method.
+        ///     Log the end of the call to the method.
         /// </summary>
         Leave = 16,
-        
+
         /// <summary>
-        /// Log the return value of the method.
+        ///     Log the return value of the method.
         /// </summary>
         LogReturnValue = 32,
-      
+
         /// <summary>
-        /// Mask that covers both <see cref="Enter"/> and <see cref="Leave"/>.
+        ///     Mask that covers both <see cref="Enter" /> and <see cref="Leave" />.
         /// </summary>
         CreateEntryMask = Leave | Enter
     }
-
 }

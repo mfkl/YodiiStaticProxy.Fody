@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\ServiceCallException.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,52 +28,51 @@ using System.Runtime.Serialization;
 
 namespace YodiiStaticProxy.Fody
 {
-
     /// <summary>
-    /// Base exception for <see cref="ServiceNotAvailableException"/> and <see cref="ServiceCallBlockedException"/>. 
+    ///     Base exception for <see cref="ServiceNotAvailableException" /> and <see cref="ServiceCallBlockedException" />.
     /// </summary>
-	[Serializable]
-	public class ServiceCallException : Exception, ISerializable
-	{
+    [Serializable]
+    public class ServiceCallException : Exception, ISerializable
+    {
         /// <summary>
-        /// Gets the service type name.
-        /// </summary>
-        public string ServiceTypeName { get; private set; }
-
-        /// <summary>
-        /// Initializes a new <see cref="ServiceCallException"/>.
+        ///     Initializes a new <see cref="ServiceCallException" />.
         /// </summary>
         /// <param name="serviceType">Type of the concerned service.</param>
-		public ServiceCallException( Type serviceType )
-		{
-            ServiceTypeName = serviceType.AssemblyQualifiedName;
-		}
-
-        /// <summary>
-        /// Initializes a new <see cref="ServiceCallException"/>.
-        /// </summary>
-        /// <param name="serviceType">Type of the concerned service.</param>
-        /// <param name="message">Detailed message.</param>
-        public ServiceCallException( Type serviceType, string message )
-			: base( message )
-		{
+        public ServiceCallException(Type serviceType)
+        {
             ServiceTypeName = serviceType.AssemblyQualifiedName;
         }
 
         /// <summary>
-        /// Initializes a new <see cref="ServiceNotAvailableException"/> (serialization).
+        ///     Initializes a new <see cref="ServiceCallException" />.
+        /// </summary>
+        /// <param name="serviceType">Type of the concerned service.</param>
+        /// <param name="message">Detailed message.</param>
+        public ServiceCallException(Type serviceType, string message)
+            : base(message)
+        {
+            ServiceTypeName = serviceType.AssemblyQualifiedName;
+        }
+
+        /// <summary>
+        ///     Initializes a new <see cref="ServiceNotAvailableException" /> (serialization).
         /// </summary>
         /// <param name="info">Serialization information.</param>
         /// <param name="context">Serialization context.</param>
-        protected ServiceCallException( SerializationInfo info, StreamingContext context )
-			: base( info, context )
-		{
-            ServiceTypeName = info.GetString( "ServiceTypeName" );
-		}
-
-        void ISerializable.GetObjectData( SerializationInfo info, StreamingContext context )
+        protected ServiceCallException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
-            info.AddValue( "ServiceTypeName", ServiceTypeName );
+            ServiceTypeName = info.GetString("ServiceTypeName");
+        }
+
+        /// <summary>
+        ///     Gets the service type name.
+        /// </summary>
+        public string ServiceTypeName { get; }
+
+        void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("ServiceTypeName", ServiceTypeName);
         }
     }
 }

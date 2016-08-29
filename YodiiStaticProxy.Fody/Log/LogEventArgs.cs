@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\LogEventArgs.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,39 +28,32 @@ using System;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Base class for event logs.
+    ///     Base class for event logs.
     /// </summary>
     public abstract class LogEventArgs : EventArgs, ILogEntry
     {
-        int _lsn;
+        /// <summary>
+        ///     True if this event is beeing created (its <see cref="LSN" /> is negative).
+        /// </summary>
+        public bool IsCreating
+        {
+            get { return LSN < 0; }
+        }
 
         /// <summary>
-        /// Describes the type of this entry.
+        ///     Describes the type of this entry.
         /// </summary>
         public abstract LogEntryType EntryType { get; }
 
         /// <summary>
-        /// Log Serial Number: incremental number that enables the ordering of the events. 
-        /// When negative, this event is under creation (<see cref="IsCreating"/> is true).
+        ///     Log Serial Number: incremental number that enables the ordering of the events.
+        ///     When negative, this event is under creation (<see cref="IsCreating" /> is true).
         /// </summary>
-        public int LSN
-        {
-            get { return _lsn; }
-            protected set { _lsn = value; }
-        }
+        public int LSN { get; protected set; }
 
         /// <summary>
-        /// True if this event is beeing created (its <see cref="LSN"/> is negative).
-        /// </summary>
-        public bool IsCreating
-        {
-            get { return _lsn < 0; }
-        }
-
-        /// <summary>
-        /// Depth in the call stack (at the proxy level).
+        ///     Depth in the call stack (at the proxy level).
         /// </summary>
         public abstract int Depth { get; }
-
     }
 }

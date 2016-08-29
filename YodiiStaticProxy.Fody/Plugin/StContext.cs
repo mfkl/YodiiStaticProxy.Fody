@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\StContext.cs) is part of CiviKey. 
 *  
@@ -19,48 +20,17 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
 using System.Collections.Generic;
+using Yodii.Model;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-    class StContext
+    internal class StContext
     {
-        readonly Dictionary<object, object> _shared;
-        CancellationInfo _info;
-
-        public readonly PluginProxy Plugin;
-
-        public StContext( PluginProxy plugin, Dictionary<object, object> shared )
-        {
-            Plugin = plugin;
-            _shared = shared;
-        }
-
-        public ServiceManager.Impact ServiceImpact { get; set; }
-
-        public virtual void Cancel( string message = null, Exception ex = null )
-        {
-            _info = new CancellationInfo( Plugin.PluginInfo ) { ErrorMessage = message, Error = ex };
-        }
-
-        public bool Success
-        {
-            get { return _info == null; }
-        }
-
-        public bool HandleSuccess( List<CancellationInfo> errors, bool isPreStart )
-        {
-            if( _info == null ) return true;
-            _info.IsStartCanceled = isPreStart;
-            errors.Add( _info );
-            return false;
-        }
-
-        public IDictionary<object, object> SharedMemory { get { return _shared; } }
-
         public enum StStatus
         {
             Stopping = 1,
@@ -70,23 +40,71 @@ namespace YodiiStaticProxy.Fody.Plugin
             StartingSwap = Starting | IsSwapping,
             IsHotSwapping = IsSwapping + 16,
             StoppingHotSwap = Stopping | IsHotSwapping,
-            StartingHotSwap = Starting | IsHotSwapping,
+            StartingHotSwap = Starting | IsHotSwapping
+        }
+
+        readonly Dictionary<object, object> _shared;
+
+        public readonly PluginProxy Plugin;
+        CancellationInfo _info;
+
+        public StContext(PluginProxy plugin, RunningStatus status, Dictionary<object, object> shared)
+        {
+            Plugin = plugin;
+            _shared = shared;
+            RunningStatus = status;
+        }
+
+        public RunningStatus RunningStatus { get; }
+
+        public ServiceManager.Impact ServiceImpact { get; set; }
+
+        public bool Success
+        {
+            get { return _info == null; }
+        }
+
+        public IDictionary<object, object> SharedMemory
+        {
+            get { return _shared; }
         }
 
         public StStatus Status { get; set; }
 
         /// <summary>
-        /// Used when this is a PreStopContext that is a PreStartContext.PreviousPlugin.
+        ///     Used when this is a PreStopContext that is a PreStartContext.PreviousPlugin.
         /// </summary>
-        internal bool HotSwapped 
+        internal bool HotSwapped
         {
             get { return Status > StStatus.IsHotSwapping; }
-            set 
-            { 
-                if( value ) Status |= StStatus.IsHotSwapping; 
-                else Status &= ~StStatus.IsHotSwapping; 
-            } 
+            set
+            {
+                if(value) Status |= StStatus.IsHotSwapping;
+                else Status &= ~StStatus.IsHotSwapping;
+            }
+        }
+
+        public virtual void Cancel(string message = null, Exception ex = null)
+        {
+            _info = new CancellationInfo(Plugin.PluginInfo) {ErrorMessage = message, Error = ex};
+        }
+
+        internal void CancelByUnhandledExceptionInPreStartOrStop(Exception ex, bool isPreStart)
+        {
+            _info = new CancellationInfo(Plugin.PluginInfo)
+            {
+                ErrorMessage = "Unhandled exception in Pre" + (isPreStart ? "Start" : "Stop"),
+                Error = ex,
+                IsPreStartOrStopUnhandledException = true
+            };
+        }
+
+        public bool HandleSuccess(List<CancellationInfo> errors, bool isPreStart)
+        {
+            if(_info == null) return true;
+            _info.IsStartCanceled = isPreStart;
+            errors.Add(_info);
+            return false;
         }
     }
-
 }

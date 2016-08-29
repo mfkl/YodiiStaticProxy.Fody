@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogMethodEntryError.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -29,16 +31,16 @@ using YodiiStaticProxy.Fody.Log;
 namespace YodiiStaticProxy.Fody.Service
 {
     /// <summary>
-    /// Used for error that occured in a logged method: the <see cref="LogMethodEntry"/> already exists.
+    ///     Used for error that occured in a logged method: the <see cref="LogMethodEntry" /> already exists.
     /// </summary>
-    class LogMethodEntryError : LogHostEventArgs, ILogMethodError
+    internal class LogMethodEntryError : LogHostEventArgs, ILogMethodError
     {
-        LogMethodEntry _entry;
+        readonly LogMethodEntry _entry;
         internal Exception _exception;
 
-        internal LogMethodEntryError( int lsn, LogMethodEntry e, Exception ex )
+        internal LogMethodEntryError(int lsn, LogMethodEntry e, Exception ex)
         {
-            Debug.Assert( e != null && ex != null );
+            Debug.Assert(e != null && ex != null);
             LSN = lsn;
             _entry = e;
             _exception = ex;
@@ -78,6 +80,5 @@ namespace YodiiStaticProxy.Fody.Service
         {
             get { return _entry.Method; }
         }
-
     }
 }

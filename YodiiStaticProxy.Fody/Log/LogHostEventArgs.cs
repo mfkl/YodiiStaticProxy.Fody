@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\LogHostEventArgs.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -26,14 +28,13 @@ using System.Reflection;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Base class for log entries emitted by the <see cref="IPluginHost"/>.
+    ///     Base class for log entries emitted by the <see cref="ILogCenter" />.
     /// </summary>
     public abstract class LogHostEventArgs : LogEventArgs, ILogInterceptionEntry
     {
         /// <summary>
-        /// Member concerned by this event.
+        ///     Member concerned by this event.
         /// </summary>
         public abstract MemberInfo Member { get; }
-
     }
 }

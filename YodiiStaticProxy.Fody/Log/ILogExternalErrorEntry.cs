@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogExternalErrorEntry.cs) is part of CiviKey. 
 *  
@@ -19,13 +20,14 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Log event externally generated (through <see cref="ILogCenter.ExternalLogError"/>).
-    /// Combines <see cref="ILogExternalEntry"/> and <see cref="ILogErrorCaught"/>.
+    ///     Log event externally generated (through <see cref="ILogCenter.ExternalLogError" />).
+    ///     Combines <see cref="ILogExternalEntry" /> and <see cref="ILogErrorCaught" />.
     /// </summary>
     public interface ILogExternalErrorEntry : ILogExternalEntry, ILogErrorCaught
     {

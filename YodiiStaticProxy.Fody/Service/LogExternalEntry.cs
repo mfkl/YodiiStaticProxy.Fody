@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogExternalEntry.cs) is part of CiviKey. 
 *  
@@ -19,24 +20,21 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using YodiiStaticProxy.Fody.Log;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-    class LogExternalEntry : LogEventArgs, ILogExternalEntry
+    internal class LogExternalEntry : LogEventArgs, ILogExternalEntry
     {
-        int _depth;
-        string _msg;
-        object _extraData;
-
-        internal LogExternalEntry( int lsn, int depth, string message, object extraData )
+        internal LogExternalEntry(int lsn, int depth, string message, object extraData)
         {
             LSN = -lsn;
-            _depth = depth;
-            _msg = message;
-            _extraData = extraData;
+            Depth = depth;
+            Message = message;
+            ExtraData = extraData;
         }
 
         public override LogEntryType EntryType
@@ -44,20 +42,10 @@ namespace YodiiStaticProxy.Fody.Service
             get { return LogEntryType.External; }
         }
 
-        public override int Depth
-        {
-            get { return _depth; }
-        }
+        public override int Depth { get; }
 
-        public string Message
-        {
-            get { return _msg; }
-        }
+        public string Message { get; }
 
-        public object ExtraData
-        {
-            get { return _extraData; }
-        }
-
+        public object ExtraData { get; }
     }
 }

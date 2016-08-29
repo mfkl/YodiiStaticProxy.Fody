@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogEventNotRunningError.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Diagnostics;
@@ -27,19 +29,15 @@ using YodiiStaticProxy.Fody.Log;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-    class LogEventNotRunningError : LogHostEventArgs, ILogEventNotRunningError
+    internal class LogEventNotRunningError : LogHostEventArgs, ILogEventNotRunningError
     {
-        int _depth;
-        EventInfo _event;
-        bool _serviceIsDisabled;
-
-        internal LogEventNotRunningError( int lsn, int depth, EventInfo e, bool serviceIsDisabled )
+        internal LogEventNotRunningError(int lsn, int depth, EventInfo e, bool serviceIsDisabled)
         {
-            Debug.Assert( e != null );
+            Debug.Assert(e != null);
             LSN = lsn;
-            _event = e;
-            _depth = depth;
-            _serviceIsDisabled = serviceIsDisabled;
+            Event = e;
+            Depth = depth;
+            ServiceIsDisabled = serviceIsDisabled;
         }
 
         public override LogEntryType EntryType
@@ -47,30 +45,20 @@ namespace YodiiStaticProxy.Fody.Service
             get { return LogEntryType.EventNotRunningError; }
         }
 
-        public bool ServiceIsDisabled
-        {
-            get { return _serviceIsDisabled; }
-        }
+        public bool ServiceIsDisabled { get; }
 
-        public override int Depth
-        {
-            get { return _depth; }
-        }
+        public override int Depth { get; }
 
         public MemberInfo Culprit
         {
-            get { return _event; }
+            get { return Event; }
         }
 
-        public EventInfo Event
-        {
-            get { return _event; }
-        }
+        public EventInfo Event { get; }
 
         public override MemberInfo Member
         {
-            get { return _event; }
+            get { return Event; }
         }
-
     }
 }

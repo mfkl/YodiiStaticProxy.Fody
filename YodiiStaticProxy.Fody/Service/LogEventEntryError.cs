@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogEventEntryError.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -29,20 +31,18 @@ using YodiiStaticProxy.Fody.Log;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-    class LogEventEntryError : LogHostEventArgs, ILogEventError
+    internal class LogEventEntryError : LogHostEventArgs, ILogEventError
     {
-        LogEventEntry _entry;
-        MethodInfo _target;
-        Exception _exception;
+        readonly LogEventEntry _entry;
         internal LogEventEntryError _nextError;
 
-        internal LogEventEntryError( int lsn, LogEventEntry e, MethodInfo target, Exception ex )
+        internal LogEventEntryError(int lsn, LogEventEntry e, MethodInfo target, Exception ex)
         {
-            Debug.Assert( e != null && target != null && ex != null );
+            Debug.Assert(e != null && target != null && ex != null);
             LSN = lsn;
             _entry = e;
-            _target = target;
-            _exception = ex;
+            Target = target;
+            Error = ex;
         }
 
         public override LogEntryType EntryType
@@ -60,14 +60,11 @@ namespace YodiiStaticProxy.Fody.Service
             get { return _entry.Event; }
         }
 
-        public MethodInfo Target
-        {
-            get { return _target; }
-        }
+        public MethodInfo Target { get; }
 
         public MemberInfo Culprit
         {
-            get { return _target; }
+            get { return Target; }
         }
 
         public ILogEventEntry EventEntry
@@ -80,15 +77,11 @@ namespace YodiiStaticProxy.Fody.Service
             get { return _entry; }
         }
 
-        public Exception Error
-        {
-            get { return _exception; }
-        }
+        public Exception Error { get; }
 
         public override MemberInfo Member
         {
             get { return _entry.Event; }
         }
-
     }
 }

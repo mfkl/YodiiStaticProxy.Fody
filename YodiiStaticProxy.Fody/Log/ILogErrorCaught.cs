@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogErrorCaught.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -26,14 +28,13 @@ using System;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Base interface that defines an error associated to an existing <see cref="Exception"/>.
+    ///     Base interface that defines an error associated to an existing <see cref="Exception" />.
     /// </summary>
     public interface ILogErrorCaught : ILogEntry, ILogErrorCulprit
     {
         /// <summary>
-        /// The error itself. Can not be null.
+        ///     The error itself. Can not be null.
         /// </summary>
         Exception Error { get; }
-
     }
 }

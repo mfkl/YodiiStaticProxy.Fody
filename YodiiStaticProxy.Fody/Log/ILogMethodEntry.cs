@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogMethodEntry.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -26,24 +28,23 @@ using System.Reflection;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Log event related to a method call.
+    ///     Log event related to a method call.
     /// </summary>
     public interface ILogMethodEntry : ILogInterceptionEntry, ILogWithParametersEntry
     {
         /// <summary>
-        /// Gets the service logged method.
+        ///     Gets the service logged method.
         /// </summary>
         MethodInfo Method { get; }
 
         /// <summary>
-        /// Gets the returned value if it has been captured.
+        ///     Gets the returned value if it has been captured.
         /// </summary>
         object ReturnValue { get; }
 
         /// <summary>
-        /// Gets the error entry if an error occured.
+        ///     Gets the error entry if an error occured.
         /// </summary>
-        ILogMethodError Error { get; }       
-
+        ILogMethodError Error { get; }
     }
 }

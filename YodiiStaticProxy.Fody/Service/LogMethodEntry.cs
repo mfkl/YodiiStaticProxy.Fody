@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogMethodEntry.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Diagnostics;
@@ -27,27 +29,12 @@ using YodiiStaticProxy.Fody.Log;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-    class LogMethodEntry : LogHostEventArgs, ILogMethodEntry
+    internal class LogMethodEntry : LogHostEventArgs, ILogMethodEntry
     {
         int _depth;
-        MethodInfo _method;
+        LogMethodEntryError _error;
         internal object[] _parameters;
         internal object _returnValue;
-        LogMethodEntryError _error;
-
-        internal void InitOpen( int lsn, int depth, MethodInfo m )
-        {
-            LSN = -lsn;
-            _depth = depth;
-            _method = m;
-        }
-
-        internal void InitClose( int lsn, int depth, MethodInfo m )
-        {
-            LSN = lsn;
-            _depth = depth;
-            _method = m;
-        }
 
         public override LogEntryType EntryType
         {
@@ -59,10 +46,7 @@ namespace YodiiStaticProxy.Fody.Service
             get { return _depth; }
         }
 
-        public MethodInfo Method
-        {
-            get { return _method; }
-        }
+        public MethodInfo Method { get; set; }
 
         public object[] Parameters
         {
@@ -76,7 +60,7 @@ namespace YodiiStaticProxy.Fody.Service
 
         public override MemberInfo Member
         {
-            get { return _method; }
+            get { return Method; }
         }
 
         public ILogMethodError Error
@@ -84,24 +68,38 @@ namespace YodiiStaticProxy.Fody.Service
             get { return _error; }
         }
 
+        internal void InitOpen(int lsn, int depth, MethodInfo m)
+        {
+            LSN = -lsn;
+            _depth = depth;
+            Method = m;
+        }
+
+        internal void InitClose(int lsn, int depth, MethodInfo m)
+        {
+            LSN = lsn;
+            _depth = depth;
+            Method = m;
+        }
+
         /// <summary>
-        /// Setting the error closes the entry if it was opened.
-        /// True is returned if the entry has been closed.
+        ///     Setting the error closes the entry if it was opened.
+        ///     True is returned if the entry has been closed.
         /// </summary>
-        internal bool SetError( LogMethodEntryError e )
+        internal bool SetError(LogMethodEntryError e)
         {
             _error = e;
-            if( LSN < 0 )
+            if(LSN < 0)
             {
                 LSN = -LSN;
                 return true;
             }
             return false;
         }
-        
+
         internal void Close()
         {
-            Debug.Assert( IsCreating );
+            Debug.Assert(IsCreating);
             LSN = -LSN;
         }
     }

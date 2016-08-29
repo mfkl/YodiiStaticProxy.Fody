@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\LogEntryType.cs) is part of CiviKey. 
 *  
@@ -19,49 +20,49 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Qualifies the actual type of <see cref="ILogInterceptionEntry"/>.
+    ///     Qualifies the actual type of <see cref="ILogInterceptionEntry" />.
     /// </summary>
     public enum LogEntryType
     {
         /// <summary>
-        /// The log entry is a <see cref="ILogEventEntry"/>.
+        ///     The log entry is a <see cref="ILogEventEntry" />.
         /// </summary>
         Event,
 
         /// <summary>
-        /// The log entry is a <see cref="ILogEventError"/>.
+        ///     The log entry is a <see cref="ILogEventError" />.
         /// </summary>
         EventError,
 
         /// <summary>
-        /// The log entry is a <see cref="ILogEventNotRunningError"/>.
+        ///     The log entry is a <see cref="ILogEventNotRunningError" />.
         /// </summary>
         EventNotRunningError,
 
         /// <summary>
-        /// The log entry is a <see cref="ILogMethodEntry"/>.
+        ///     The log entry is a <see cref="ILogMethodEntry" />.
         /// </summary>
         Method,
 
         /// <summary>
-        /// The log entry is a <see cref="ILogMethodError"/>.
+        ///     The log entry is a <see cref="ILogMethodError" />.
         /// </summary>
         MethodError,
 
         /// <summary>
-        /// The log entry is a <see cref="ILogExternal"/>.
+        ///     The log entry is a <see cref="ILogExternalEntry" />.
         /// </summary>
         External,
-        
+
         /// <summary>
-        /// The log entry is a <see cref="ILogExternalError"/>.
+        ///     The log entry is a <see cref="ILogExternalErrorEntry" />.
         /// </summary>
         ExternalError
     }
-
 }

@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Service\LogExternalErrorEntry.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -27,16 +29,14 @@ using YodiiStaticProxy.Fody.Log;
 
 namespace YodiiStaticProxy.Fody.Service
 {
-    class LogExternalErrorEntry : LogExternalEntry, ILogExternalErrorEntry
+    internal class LogExternalErrorEntry : LogExternalEntry, ILogExternalErrorEntry
     {
-        Exception _error;
-        MemberInfo _culprit;
-
-        internal LogExternalErrorEntry( int lsn, int depth, Exception error, MemberInfo optionalExplicitCulprit, string message, object extraData )
-            : base( lsn, depth, message, extraData )
+        internal LogExternalErrorEntry(int lsn, int depth, Exception error, MemberInfo optionalExplicitCulprit,
+            string message, object extraData)
+            : base(lsn, depth, message, extraData)
         {
-            _error = error;
-            _culprit = optionalExplicitCulprit ?? _error.TargetSite;
+            Error = error;
+            Culprit = optionalExplicitCulprit ?? Error.TargetSite;
         }
 
         public override LogEntryType EntryType
@@ -44,15 +44,8 @@ namespace YodiiStaticProxy.Fody.Service
             get { return LogEntryType.ExternalError; }
         }
 
-        public MemberInfo Culprit
-        {
-            get { return _culprit; }
-        }
+        public MemberInfo Culprit { get; }
 
-        public Exception Error
-        {
-            get { return _error; }
-        }
-
+        public Exception Error { get; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogEventError.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System.Reflection;
@@ -27,27 +29,27 @@ using CK.Core;
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Log event related to an error during event raising.
+    ///     Log event related to an error during event raising.
     /// </summary>
     public interface ILogEventError : ILogInterceptionEntry, ILogErrorCaught
     {
         /// <summary>
-        /// The event that raised the error.
+        ///     The event that raised the error.
         /// </summary>
         EventInfo Event { get; }
 
         /// <summary>
-        /// Corresponding log entry if it exists (null otherwise).
+        ///     Corresponding log entry if it exists (null otherwise).
         /// </summary>
         ILogEventEntry EventEntry { get; }
 
         /// <summary>
-        /// Other errors related to the same event.
+        ///     Other errors related to the same event.
         /// </summary>
         ICKReadOnlyCollection<ILogEventError> OtherErrors { get; }
 
         /// <summary>
-        /// The subscriber method that thrown the error: it is the <see cref="ILogErrorCulprit.Culprit"/>.
+        ///     The subscriber method that thrown the error: it is the <see cref="ILogErrorCulprit.Culprit" />.
         /// </summary>
         MethodInfo Target { get; }
     }

@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Log\ILogWithParametersEntry.cs) is part of CiviKey. 
 *  
@@ -19,18 +20,19 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 namespace YodiiStaticProxy.Fody.Log
 {
     /// <summary>
-    /// Common interface for log events that carries <see cref="Parameters"/>.
+    ///     Common interface for log events that carries <see cref="Parameters" />.
     /// </summary>
     public interface ILogWithParametersEntry : ILogEntry
     {
         /// <summary>
-        /// Actual parameter values of the event. 
-        /// Can be null if log configuration did not require parameters to be logged.
+        ///     Actual parameter values of the event.
+        ///     Can be null if log configuration did not require parameters to be logged.
         /// </summary>
         object[] Parameters { get; }
     }

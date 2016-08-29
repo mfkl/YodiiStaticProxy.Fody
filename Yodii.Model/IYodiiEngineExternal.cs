@@ -38,18 +38,30 @@ namespace Yodii.Model
     public interface IYodiiEngineExternal : IYodiiEngineBase, INotifyPropertyChanged
     {
         /// <summary>
-        /// Whether this engine is currently running.
+        /// Gets whether this engine is currently running.
         /// </summary>
         bool IsRunning { get; }
 
         /// <summary>
-        /// Whether this engine is currently stopping.
+        /// Gets whether this engine is currently stopping.
         /// </summary>
         bool IsStopping { get; }
 
         /// <summary>
+        /// Gets whether this engine is currently working: it is currently applying a configuration change, processing 
+        /// a dynamic command or stopping.
+        /// When true, this engine can not accept any subsequent commands or configuration changes.
+        /// </summary>
+        bool IsWorking { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IYodiiEngineHost"/>.
+        /// </summary>
+        IYodiiEngineHost Host { get; }
+
+        /// <summary>
         /// Starts the engine (that must be stopped), performs all possible resolutions,
-        /// and begins monitoring configuration for changes.
+        /// and starts listening configuration's changes.
         /// </summary>
         /// <param name="persistedCommands">Optional list of commands that will be initialized.</param>
         /// <returns>Engine start result.</returns>

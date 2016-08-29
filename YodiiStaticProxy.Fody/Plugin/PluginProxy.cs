@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\Plugin\PluginProxy.cs) is part of CiviKey. 
 *  
@@ -19,6 +20,7 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
+
 #endregion
 
 using System;
@@ -28,13 +30,12 @@ using YodiiStaticProxy.Fody.Service;
 
 namespace YodiiStaticProxy.Fody.Plugin
 {
-
-    sealed class PluginProxy : PluginProxyBase, IPluginProxy, IYodiiEngine
+    internal sealed class PluginProxy : PluginProxyBase, IPluginProxy, IYodiiEngineProxy
     {
         readonly IYodiiEngineExternal _engine;
         IActivityMonitor _monitor;
 
-        public PluginProxy( IYodiiEngineExternal e, IPluginInfo pluginKey )
+        public PluginProxy(IYodiiEngineExternal e, IPluginInfo pluginKey)
         {
             _engine = e;
             PluginInfo = pluginKey;
@@ -42,32 +43,87 @@ namespace YodiiStaticProxy.Fody.Plugin
 
         public IPluginInfo PluginInfo { get; internal set; }
 
-        internal bool TryLoad( ServiceHost serviceHost, Func<IPluginInfo, object[], IYodiiPlugin> pluginCreator )
+        public event EventHandler IsRunningLockedChanged;
+
+        public bool IsRunningLocked { get; set; }
+
+        public bool IsSelfLocked
         {
-            if( _monitor == null ) _monitor = new ActivityMonitor( PluginInfo.PluginFullName );
-            object[] ctorParameters = new object[ PluginInfo.ConstructorInfo.ParameterCount ];
-            foreach( var sRef in PluginInfo.ServiceReferences )
+            get
             {
-                ctorParameters[sRef.ConstructorParameterIndex] = serviceHost.EnsureProxyForDynamicService( sRef.Reference );
+                var layer = _engine.Configuration.Layers.FindOne("Self-Locking");
+                IConfigurationItem i;
+                return layer != null
+                       && (i = layer.Items[PluginInfo.PluginFullName]) != null
+                       && i.Status == ConfigurationStatus.Running;
             }
-            foreach( var knownParam in PluginInfo.ConstructorInfo.KnownParameters )
+        }
+
+        public bool SelfLock()
+        {
+            CheckSelfLockCall();
+            return
+                _engine.Configuration.Layers.FindOneOrCreate("Self-Locking")
+                    .Set(PluginInfo.PluginFullName, ConfigurationStatus.Running)
+                    .Success;
+        }
+
+        public void SelfUnlock()
+        {
+            CheckSelfLockCall();
+            var layer = _engine.Configuration.Layers.FindOne("Self-Locking");
+            if(layer != null) layer.Set(PluginInfo.PluginFullName, ConfigurationStatus.Optional).ThrowOnError();
+        }
+
+        internal bool TryLoad(ServiceHost serviceHost, Func<IPluginInfo, object[], IYodiiPlugin> pluginCreator)
+        {
+            if(_monitor == null) _monitor = new ActivityMonitor(PluginInfo.PluginFullName);
+            var ctorParameters = new object[PluginInfo.ConstructorInfo.ParameterCount];
+            foreach (var sRef in PluginInfo.ServiceReferences)
             {
-                if( knownParam.DescriptiveType == "IYodiiEngine" )
+                ctorParameters[sRef.ConstructorParameterIndex] = serviceHost.EnsureProxyForDynamicService(sRef.Reference);
+            }
+            foreach (var knownParam in PluginInfo.ConstructorInfo.KnownParameters)
+            {
+                if(knownParam.DescriptiveType == "IYodiiEngine")
                 {
                     ctorParameters[knownParam.ParameterIndex] = this;
                 }
-                else if( knownParam.DescriptiveType == "IActivityMonitor" )
+                else if(knownParam.DescriptiveType == "IActivityMonitor")
                 {
                     ctorParameters[knownParam.ParameterIndex] = _monitor;
                 }
             }
-            return TryLoad( serviceHost, () => pluginCreator( PluginInfo, ctorParameters ), PluginInfo.PluginFullName );
+            return TryLoad(serviceHost, () => pluginCreator(PluginInfo, ctorParameters), PluginInfo.PluginFullName);
         }
 
+        internal void SetRunningLocked(bool value)
+        {
+            if(IsRunningLocked != value)
+            {
+                IsRunningLocked = value;
+                var h = IsRunningLockedChanged;
+                if(h != null) h(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        ///     Currently only checks that Status == PluginStatus.Started: the status is Started in Start... but unfortunaltely
+        ///     also
+        ///     in PreStop... We do not currently have the information available to detect calls from PreStop method.
+        /// </summary>
+        void CheckSelfLockCall()
+        {
+            if(Status != PluginStatus.Started)
+            {
+//                throw new InvalidOperationException( R.SelfLockOrUnlockMustBeCalledOnlyWhenThePluginRunsOrFromStartMethod );
+                throw new InvalidOperationException("SelfLockOrUnlockMustBeCalledOnlyWhenThePluginRunsOrFromStartMethod");
+            }
+        }
 
         #region IYodiiEngine Members
 
-        IYodiiEngineExternal IYodiiEngine.ExternalEngine
+        IYodiiEngineExternal IYodiiEngineProxy.ExternalEngine
         {
             get { return _engine; }
         }
@@ -82,34 +138,37 @@ namespace YodiiStaticProxy.Fody.Plugin
             get { return _engine.LiveInfo; }
         }
 
-        IYodiiEngineResult IYodiiEngineBase.StartItem( ILiveYodiiItem pluginOrService, StartDependencyImpact impact, string callerKey )
+        IYodiiEngineResult IYodiiEngineBase.StartItem(ILiveYodiiItem pluginOrService, StartDependencyImpact impact,
+            string callerKey)
         {
-            return _engine.StartItem( pluginOrService, impact, callerKey ?? PluginInfo.PluginFullName );
+            return _engine.StartItem(pluginOrService, impact, callerKey ?? PluginInfo.PluginFullName);
         }
 
-        IYodiiEngineResult IYodiiEngineBase.StopItem( ILiveYodiiItem pluginOrService, string callerKey )
+        IYodiiEngineResult IYodiiEngineBase.StopItem(ILiveYodiiItem pluginOrService, string callerKey)
         {
-            return _engine.StopItem( pluginOrService, callerKey ?? PluginInfo.PluginFullName );
+            return _engine.StopItem(pluginOrService, callerKey ?? PluginInfo.PluginFullName);
         }
 
-        IYodiiEngineResult IYodiiEngineBase.StartPlugin( string pluginFullName, StartDependencyImpact impact, string callerKey )
+        IYodiiEngineResult IYodiiEngineBase.StartPlugin(string pluginFullName, StartDependencyImpact impact,
+            string callerKey)
         {
-            return _engine.StartPlugin( pluginFullName, impact, callerKey ?? PluginInfo.PluginFullName );
+            return _engine.StartPlugin(pluginFullName, impact, callerKey ?? PluginInfo.PluginFullName);
         }
 
-        IYodiiEngineResult IYodiiEngineBase.StopPlugin( string pluginFullName, string callerKey )
+        IYodiiEngineResult IYodiiEngineBase.StopPlugin(string pluginFullName, string callerKey)
         {
-            return _engine.StopPlugin( pluginFullName, callerKey ?? PluginInfo.PluginFullName );
+            return _engine.StopPlugin(pluginFullName, callerKey ?? PluginInfo.PluginFullName);
         }
 
-        IYodiiEngineResult IYodiiEngineBase.StartService( string serviceFullName, StartDependencyImpact impact, string callerKey )
+        IYodiiEngineResult IYodiiEngineBase.StartService(string serviceFullName, StartDependencyImpact impact,
+            string callerKey)
         {
-            return _engine.StartService( serviceFullName, impact, callerKey ?? PluginInfo.PluginFullName );
+            return _engine.StartService(serviceFullName, impact, callerKey ?? PluginInfo.PluginFullName);
         }
 
-        IYodiiEngineResult IYodiiEngineBase.StopService( string serviceFullName, string callerKey )
+        IYodiiEngineResult IYodiiEngineBase.StopService(string serviceFullName, string callerKey)
         {
-            return _engine.StopService( serviceFullName, callerKey ?? PluginInfo.PluginFullName );
+            return _engine.StopService(serviceFullName, callerKey ?? PluginInfo.PluginFullName);
         }
 
         #endregion

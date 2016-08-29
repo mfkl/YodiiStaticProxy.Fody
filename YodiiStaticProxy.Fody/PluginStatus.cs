@@ -1,4 +1,5 @@
 ﻿#region LGPL License
+
 /*----------------------------------------------------------------------------
 * This file (Yodii.Host\PluginStatus.cs) is part of CiviKey. 
 *  
@@ -19,41 +20,40 @@
 *     In’Tech INFO <http://www.intechinfo.fr>,
 * All rights reserved. 
 *-----------------------------------------------------------------------------*/
-#endregion
 
-using Yodii.Model;
+#endregion
 
 namespace YodiiStaticProxy.Fody
 {
     /// <summary>
-    /// Defines the status of a plugin with its <see cref="Stopping"/> and <see cref="Starting"/> transitions.
+    ///     Defines the status of a plugin with its <see cref="Stopping" /> and <see cref="Starting" /> transitions.
     /// </summary>
     public enum PluginStatus
     {
         /// <summary>
-        /// Plugin is not instanciated.
+        ///     Plugin is not instanciated.
         /// </summary>
         Null = 0,
 
         /// <summary>
-        /// Plugin is stopped.
+        ///     Plugin is stopped.
         /// </summary>
         Stopped = 1,
-        
+
         /// <summary>
-        /// Plugin is stopping: <see cref="IYodiiPlugin.PreStop"/> has been called
-        ///  but not <see cref="IYodiiPlugin.Stop"/> yet.
+        ///     Plugin is stopping: <see cref="IYodiiPlugin.PreStop" /> has been called
+        ///     but not <see cref="IYodiiPlugin.Stop" /> yet.
         /// </summary>
         Stopping = 2,
 
         /// <summary>
-        /// Plugin is starting: <see cref="IYodiiPlugin.PreStart"/> has been called 
-        /// but not <see cref="IYodiiPlugin.Start"/> yet.
+        ///     Plugin is starting: <see cref="IYodiiPlugin.PreStart" /> has been called
+        ///     but not <see cref="IYodiiPlugin.Start" /> yet.
         /// </summary>
         Starting = 3,
-        
+
         /// <summary>
-        /// Plugin is running.
+        ///     Plugin is running.
         /// </summary>
         Started = 4
     }
