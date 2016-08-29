@@ -40,7 +40,7 @@ namespace YodiiStaticProxy.Fody
 
                     foreach(var type in typesToProxy.Select(t => t.UnderlyingSystemType))
                     {
-                        LogInfo.Invoke("Creating static proxy for type " + type + " of assembly " + assembly.FullName);
+                        LogInfo("Creating static proxy for type " + type + " of assembly " + assembly.FullName);
                         var proxyDefinition = new DefaultProxyDefinition(type);
                         ProxyFactory.CreateStaticProxy(proxyDefinition);
                     }
@@ -48,7 +48,7 @@ namespace YodiiStaticProxy.Fody
             }
             catch (Exception e)
             {
-                LogInfo.Invoke(e.Message);
+                LogInfo(e.Message);
             }
         }
 
