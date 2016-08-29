@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nuget", "NuGet\Nuget.csproj", "{63786CE5-D899-43DF-AD4E-C2CA3BAC3FC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyToProcess", "AssemblyToProcess\AssemblyToProcess.csproj", "{E97E649F-B703-47E3-B18A-0871D3498742}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BE388D8F-BDDF-42F9-8356-876FF834F5F9}"
 	ProjectSection(SolutionItems) = preProject
 		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
@@ -39,12 +37,6 @@ Global
 		{63786CE5-D899-43DF-AD4E-C2CA3BAC3FC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63786CE5-D899-43DF-AD4E-C2CA3BAC3FC2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{63786CE5-D899-43DF-AD4E-C2CA3BAC3FC2}.Release|x86.ActiveCfg = Release|Any CPU
-		{E97E649F-B703-47E3-B18A-0871D3498742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E97E649F-B703-47E3-B18A-0871D3498742}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E97E649F-B703-47E3-B18A-0871D3498742}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{E97E649F-B703-47E3-B18A-0871D3498742}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E97E649F-B703-47E3-B18A-0871D3498742}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E97E649F-B703-47E3-B18A-0871D3498742}.Release|x86.ActiveCfg = Release|Any CPU
 		{DB68716F-9883-433A-928D-AA597D377C9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DB68716F-9883-433A-928D-AA597D377C9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB68716F-9883-433A-928D-AA597D377C9C}.Debug|x86.ActiveCfg = Debug|Any CPU

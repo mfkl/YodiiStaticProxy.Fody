@@ -52,13 +52,5 @@ namespace Tests
                 return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(ass => ass.FullName == args.Name);
             }
         }
-
-//#if(DEBUG)
-//        [Test]
-//        public void PeVerify()
-//        {
-//            Verifier.Verify(assemblyPath,newAssemblyPath);
-//        }
-//#endif
     }
 }
