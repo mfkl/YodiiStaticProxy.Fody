@@ -46,11 +46,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
+using CK.Core;
 using CK.Reflection;
 using Yodii.Model;
+using Util = YodiiStaticProxy.Fody.Finders.Util;
 
 namespace YodiiStaticProxy.Fody.Service
 {
@@ -70,14 +73,12 @@ namespace YodiiStaticProxy.Fody.Service
 
         static ProxyFactory()
         {
-            var assemblyLocation = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\lib"));
-            var dir = Directory.CreateDirectory(assemblyLocation);
-            var ldir = dir.FullName;
+            var libDir = Util.GetProxyAssemblyFolderPath();
 
             _assemblyName = new AssemblyName("YodiiStaticProxy")
             {
                 Version = new Version(1, 0, 0, 0),
-                CodeBase = ldir
+                CodeBase = libDir
             };
 
             //            StrongNameKeyPair kp;
@@ -114,12 +115,9 @@ namespace YodiiStaticProxy.Fody.Service
 
 
             // Creates a new Assembly for running ans saving.
-
-            _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_assemblyName,
-                AssemblyBuilderAccess.RunAndSave, assemblyLocation);
+            _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave, libDir);
 
             // Creates a new Module
-
             _moduleBuilder = _assemblyBuilder.DefineDynamicModule("ProxiesModule", _assemblyName.Name + ".dll", true);
             _delegateGetInvocationList = typeof (Delegate).GetMethod("GetInvocationList", Type.EmptyTypes);
             _delegateGetMethod = typeof (Delegate).GetMethod("get_Method", Type.EmptyTypes);
@@ -130,7 +128,6 @@ namespace YodiiStaticProxy.Fody.Service
 
 
         static void CreateUnavailableImplementation(Type interfaceType, string dynamicTypeName)
-
         {
             // Defines a public sealed class that only implements typeInterface 
 
@@ -259,9 +256,7 @@ namespace YodiiStaticProxy.Fody.Service
             _assemblyBuilder.Save(_assemblyName.Name + ".dll");
         }
 
-
         class ProxyGenerator
-
         {
             readonly IProxyDefinition _definition;
 
@@ -276,7 +271,6 @@ namespace YodiiStaticProxy.Fody.Service
 
 
             public ProxyGenerator(TypeBuilder typeBuilder, IProxyDefinition definition)
-
             {
                 _typeBuilder = typeBuilder;
 
@@ -293,21 +287,16 @@ namespace YodiiStaticProxy.Fody.Service
                 _eRefs = new List<EventInfo>();
             }
 
-
             public void DefineConstructor()
-
             {
                 // Defines constructor that accepts the typeInterface (the implementation). 
-
                 var ctor = _typeBuilder.DefineConstructor(
                     MethodAttributes.Public,
                     CallingConventions.Standard,
                     new[]
                     {_definition.TypeInterface, typeof (Type), typeof (IList<MethodInfo>), typeof (IList<EventInfo>)});
 
-
                 // Generates ctor body. 
-
                 {
                     var ctorProxyBase =
                         _definition.ProxyBase.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null,
@@ -315,11 +304,9 @@ namespace YodiiStaticProxy.Fody.Service
                             {typeof (object), typeof (Type), typeof (IList<MethodInfo>), typeof (IList<EventInfo>)},
                             null);
 
-
                     var g = ctor.GetILGenerator();
 
                     // Calls base ctor.
-
                     g.LdArg(0);
 
                     g.LdArg(1);
@@ -438,17 +425,14 @@ namespace YodiiStaticProxy.Fody.Service
 
 
             public void FinalizeStatic()
-
             {
                 _typeBuilder.CreateType();
             }
 
 
             void ImplementProperties()
-
             {
                 foreach (var p in ReflectionHelper.GetFlattenProperties(_definition.TypeInterface))
-
                 {
                     var mGet = p.GetGetMethod(true);
 

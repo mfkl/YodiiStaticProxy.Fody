@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CatchExceptionGeneration.cs" />
+    <Compile Include="Finders\Util.cs" />
     <Compile Include="IPluginProxy.cs" />
     <Compile Include="IServiceHost.cs" />
     <Compile Include="IServiceHostConfiguration.cs" />
@@ -124,12 +125,10 @@
       <Name>Yodii.Model</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
 </Project>
