@@ -60,11 +60,11 @@
     <Compile Include="WeaverTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Yodii.Model\Yodii.Model.csproj">
+    <ProjectReference Include="..\..\Yodii.Model\Yodii.Model.csproj">
       <Project>{DB68716F-9883-433A-928D-AA597D377C9C}</Project>
       <Name>Yodii.Model</Name>
     </ProjectReference>
-    <ProjectReference Include="..\YodiiStaticProxy.Fody\YodiiStaticProxy.Fody.csproj">
+    <ProjectReference Include="..\..\YodiiStaticProxy.Fody\YodiiStaticProxy.Fody.csproj">
       <Project>{6653e119-5d7e-42a7-9389-e60497142836}</Project>
       <Name>YodiiStaticProxy.Fody</Name>
     </ProjectReference>

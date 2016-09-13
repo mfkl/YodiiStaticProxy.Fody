@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
+using Mono.Cecil;
 using Yodii.Model;
+using YodiiStaticProxy.Fody.Finders;
 using YodiiStaticProxy.Fody.Service;
 
 namespace YodiiStaticProxy.Fody
@@ -16,19 +18,17 @@ namespace YodiiStaticProxy.Fody
         {
             LogInfo = m => { };
         }
-
-        // Will log an informational message to MSBuild
         public Action<string> LogInfo { get; set; }
-        
+        public ModuleDefinition ModuleDefinition { get; set; }
+
         public void Execute()
         {
-            // loading assembly
-            //            var projectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\AssemblyToProcess\AssemblyToProcess.csproj"));
-            //            var assemblyPath = Path.Combine(Path.GetDirectoryName(projectPath), @"bin\Debug\AssemblyToProcess.dll");
-            //            var assembly = Assembly.LoadFile(assemblyPath);
-            //            var typesToProxy = assembly.DefinedTypes.Where(t => t.IsInterface && t.ImplementedInterfaces
-            //                                    .Any(i => i.FullName == typeof (IYodiiService).FullName))
-            //                                    .ToList();
+            // need to check if ProxyAssembly already created.
+            // if it is, load it using Mono.Cecil and add generated types to it then save.
+            // if it's not, create it using DefineDynamicAssembly, add generated types and then save (once!). 
+//            var assemblyPath = Util.GetProxyAssemblyFilePath();
+//            var moduleDefinition = ModuleDefinition.ReadModule(assemblyPath);
+
             try
             {
                 var currentAssembly = Assembly.GetExecutingAssembly();

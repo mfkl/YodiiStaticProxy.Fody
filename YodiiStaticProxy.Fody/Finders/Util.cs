@@ -6,6 +6,13 @@ namespace YodiiStaticProxy.Fody.Finders
 {
     public static class Util
     {
+        public const string ProxyAssemblyName = "YodiiStaticProxy";
+
+        public static string GetProxyAssemblyFilePath()
+        {
+            return Path.Combine(GetProxyAssemblyFolderPath(), ProxyAssemblyName);
+        }
+
         /// <summary>
         /// Creates lib folder at solution level unless it already exists.
         /// </summary>
@@ -13,11 +20,11 @@ namespace YodiiStaticProxy.Fody.Finders
         public static string GetProxyAssemblyFolderPath()
         {
             var solutionDir = TryGetSolutionDirectoryInfo();
-            var libDir = Path.GetFullPath(Path.Combine(solutionDir.FullName, "\\lib"));
+            var libDir = Path.Combine(solutionDir.FullName + "lib");
             Directory.CreateDirectory(libDir);
             return libDir;
         }
-
+        
         /// <summary>
         /// Gets the DirectoryInfo at the solution level
         /// </summary>

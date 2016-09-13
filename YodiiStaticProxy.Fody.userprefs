@@ -1,26 +1,10 @@
 ﻿<Properties StartupItem="NuGet/Nuget.csproj">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Tests/WeaverTests.cs">
+  <MonoDevelop.Ide.Workbench>
     <Files>
       <File FileName="YodiiStaticProxy.Fody/ModuleWeaver.cs" Line="32" Column="13" />
       <File FileName="Yodii.Model/FodyWeavers.xml" Line="3" Column="3" />
       <File FileName="Yodii.Model/Yodii.Model.csproj" Line="1" Column="1" />
-      <File FileName="Tests/WeaverTests.cs" Line="31" Column="13" />
     </Files>
-    <Pads>
-      <Pad Id="MonoDevelop.UnitTesting.TestPad">
-        <State name="__root__">
-          <Node name="YodiiStaticProxy.Fody" expanded="True">
-            <Node name="Tests" expanded="True">
-              <Node name="Tests" expanded="True">
-                <Node name="WeaverTests" expanded="True">
-                  <Node name="ValidateDynamicProxyTypesAreCreated" selected="True" />
-                </Node>
-              </Node>
-            </Node>
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
