@@ -65,8 +65,16 @@
       <Name>Yodii.Model</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\YodiiStaticProxy.Fody\YodiiStaticProxy.Fody.csproj">
-      <Project>{6653e119-5d7e-42a7-9389-e60497142836}</Project>
+      <Project>{6653E119-5D7E-42A7-9389-E60497142836}</Project>
       <Name>YodiiStaticProxy.Fody</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServiceAssemblyOne\ServiceAssemblyOne.csproj">
+      <Project>{1f07e92f-ac71-43fc-8b75-8b15fdf0b845}</Project>
+      <Name>ServiceAssemblyOne</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServiceAssemblyTwo\ServiceAssemblyTwo.csproj">
+      <Project>{e07f69cd-fc81-4454-b6e3-8787e555f11e}</Project>
+      <Name>ServiceAssemblyTwo</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

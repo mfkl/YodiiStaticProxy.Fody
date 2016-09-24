@@ -45,12 +45,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
-using CK.Core;
 using CK.Reflection;
 using Yodii.Model;
 using Util = YodiiStaticProxy.Fody.Finders.Util;
@@ -60,26 +57,18 @@ namespace YodiiStaticProxy.Fody.Service
     internal class ProxyFactory
     {
         static int _typeID;
-        static readonly ModuleBuilder _moduleBuilder;
         static readonly MethodInfo _delegateCombine;
         static readonly MethodInfo _delegateGetInvocationList;
         static readonly MethodInfo _delegateGetMethod;
         static readonly MethodInfo _delegateRemove;
-        static readonly MethodInfo _untypedServiceGetMethod =
-            typeof (IServiceUntyped).GetProperty("Service").GetGetMethod();
-        static readonly AssemblyBuilder _assemblyBuilder;
-        static readonly AssemblyName _assemblyName;
-
+        static readonly MethodInfo _untypedServiceGetMethod = typeof (IServiceUntyped).GetProperty("Service").GetGetMethod();
+        static AssemblyBuilder _assemblyBuilder;
+        static ModuleBuilder _moduleBuilder;
+        static AssemblyName _assemblyName;
 
         static ProxyFactory()
         {
-            var libDir = Util.GetProxyAssemblyFolderPath();
 
-            _assemblyName = new AssemblyName("YodiiStaticProxy")
-            {
-                Version = new Version(1, 0, 0, 0),
-                CodeBase = libDir
-            };
 
             //            StrongNameKeyPair kp;
 
@@ -113,20 +102,14 @@ namespace YodiiStaticProxy.Fody.Service
 
             //            assemblyName.KeyPair = kp;
 
-
-            // Creates a new Assembly for running ans saving.
-            _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave, libDir);
-
-            // Creates a new Module
-            _moduleBuilder = _assemblyBuilder.DefineDynamicModule("ProxiesModule", _assemblyName.Name + ".dll", true);
+       
             _delegateGetInvocationList = typeof (Delegate).GetMethod("GetInvocationList", Type.EmptyTypes);
             _delegateGetMethod = typeof (Delegate).GetMethod("get_Method", Type.EmptyTypes);
             Type[] paramTwoDelegates = {typeof (Delegate), typeof (Delegate)};
             _delegateCombine = typeof (Delegate).GetMethod("Combine", paramTwoDelegates);
             _delegateRemove = typeof (Delegate).GetMethod("Remove", paramTwoDelegates);
         }
-
-
+        
         static void CreateUnavailableImplementation(Type interfaceType, string dynamicTypeName)
         {
             // Defines a public sealed class that only implements typeInterface 
@@ -163,7 +146,6 @@ namespace YodiiStaticProxy.Fody.Service
 
                 g.Emit(OpCodes.Throw);
             }
-
 
             typeBuilderNotAvailable.CreateType();
         }
@@ -251,9 +233,6 @@ namespace YodiiStaticProxy.Fody.Service
 
 
             pg.FinalizeStatic();
-
-
-            _assemblyBuilder.Save(_assemblyName.Name + ".dll");
         }
 
         class ProxyGenerator
@@ -1350,6 +1329,27 @@ namespace YodiiStaticProxy.Fody.Service
 
                 return mB;
             }
+        }
+
+        public static void DefineNewProxyAssembly(string generatedProxyAssemblyName)
+        {
+            if(generatedProxyAssemblyName.Equals(_assemblyName?.Name))
+                throw new InvalidOperationException(nameof(generatedProxyAssemblyName) + " already initialized");
+
+            var libDir = Util.ProxyAssemblyFolderPath;
+            _assemblyName = new AssemblyName(generatedProxyAssemblyName)
+            {
+                Version = new Version(1, 0, 0, 0),
+                CodeBase = libDir
+            };
+
+            _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave, libDir);
+            _moduleBuilder = _assemblyBuilder.DefineDynamicModule("ProxiesModule", _assemblyName.Name + ".dll", true);
+        }
+
+        public static void WriteProxyAssemblyToDisk()
+        {
+            _assemblyBuilder.Save(_assemblyName.Name + ".dll");
         }
     }
 }
