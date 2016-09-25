@@ -72,10 +72,6 @@
       <Project>{1f07e92f-ac71-43fc-8b75-8b15fdf0b845}</Project>
       <Name>ServiceAssemblyOne</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ServiceAssemblyTwo\ServiceAssemblyTwo.csproj">
-      <Project>{e07f69cd-fc81-4454-b6e3-8787e555f11e}</Project>
-      <Name>ServiceAssemblyTwo</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

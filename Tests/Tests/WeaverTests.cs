@@ -14,10 +14,8 @@ namespace Tests
     public class WeaverTests
     {
         static readonly string LibFolderPath = Util.ProxyAssemblyFolderPath;
-        const string AssemblyDllFile = "ServiceAssemblyOne.YodiiStaticProxy.dll";
-        const string AssemblyPdbFile = "ServiceAssemblyOne.YodiiStaticProxy.pdb";
-        readonly string _dllFilePath = Path.Combine(LibFolderPath, AssemblyDllFile);
-        readonly string _pdbFilePath = Path.Combine(LibFolderPath, AssemblyPdbFile);
+        const string ServiceOneProxyAssembly = "ServiceAssemblyOne.YodiiStaticProxy.dll";
+        readonly string _serviceOneProxyDllFilePath = Path.Combine(LibFolderPath, ServiceOneProxyAssembly);
 
         [TestFixtureSetUp]
         public void Setup()
@@ -25,18 +23,9 @@ namespace Tests
             CleanUp();
 
             var serviceAssemblyOneProjectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\ServiceAssemblyOne\bin\Debug\ServiceAssemblyOne.dll"));
-            var serviceAssemblyTwoProjectPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\..\ServiceAssemblyTwo\bin\Debug\ServiceAssemblyTwo.dll"));
 
             var moduleDefinition = ModuleDefinition.ReadModule(serviceAssemblyOneProjectPath);
             var weavingTask = new ModuleWeaver
-            {
-                ModuleDefinition = moduleDefinition
-            };
-
-            weavingTask.Execute();
-
-            moduleDefinition = ModuleDefinition.ReadModule(serviceAssemblyTwoProjectPath);
-            weavingTask = new ModuleWeaver
             {
                 ModuleDefinition = moduleDefinition
             };
@@ -47,13 +36,13 @@ namespace Tests
         [Test]
         public void ValidateDynamicProxyTypesAreCreated()
         {
-            var assembly = Assembly.LoadFile(_dllFilePath);
+            var assembly = Assembly.LoadFile(_serviceOneProxyDllFilePath);
             var types = assembly.DefinedTypes.ToList();
 
             Assert.AreEqual("IServiceOne_Proxy_1", types[0].Name);
             Assert.AreEqual("IServiceOne_Proxy_1_UN", types[1].Name);
         }
-
+        
         void CleanUp()
         {
             var generatedFiles = Directory

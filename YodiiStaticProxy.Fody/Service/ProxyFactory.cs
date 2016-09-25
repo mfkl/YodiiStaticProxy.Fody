@@ -65,7 +65,7 @@ namespace YodiiStaticProxy.Fody.Service
         static AssemblyBuilder _assemblyBuilder;
         static ModuleBuilder _moduleBuilder;
         static AssemblyName _assemblyName;
-
+        const string Dll = ".dll";
         static ProxyFactory()
         {
 
@@ -1333,10 +1333,8 @@ namespace YodiiStaticProxy.Fody.Service
 
         public static void DefineNewProxyAssembly(string generatedProxyAssemblyName)
         {
-            if(generatedProxyAssemblyName.Equals(_assemblyName?.Name))
-                throw new InvalidOperationException(nameof(generatedProxyAssemblyName) + " already initialized");
-
             var libDir = Util.ProxyAssemblyFolderPath;
+
             _assemblyName = new AssemblyName(generatedProxyAssemblyName)
             {
                 Version = new Version(1, 0, 0, 0),
@@ -1344,12 +1342,12 @@ namespace YodiiStaticProxy.Fody.Service
             };
 
             _assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave, libDir);
-            _moduleBuilder = _assemblyBuilder.DefineDynamicModule("ProxiesModule", _assemblyName.Name + ".dll", true);
+            _moduleBuilder = _assemblyBuilder.DefineDynamicModule("ProxiesModule", _assemblyName.Name + Dll, true);
         }
 
         public static void WriteProxyAssemblyToDisk()
         {
-            _assemblyBuilder.Save(_assemblyName.Name + ".dll");
+            _assemblyBuilder.Save(_assemblyName.Name + Dll);
         }
     }
 }
